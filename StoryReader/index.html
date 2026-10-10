@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#181a27">
+<meta name="description" content="읽고, 듣고, 장면을 느끼는 인터랙티브 스토리북. Story & Sound.">
+<title>Story & Sound — A story you can hear.</title>
+<style>
+  :root{color-scheme:dark;--font-size:19px;--line-height:1.96;--side-space:48px;--reading-font:Georgia,'AppleMyungjo','Batang',serif;--speed:420ms;--gold:#d8b18b;--glass:rgba(23,24,33,.7)}
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:#171823;color:#f3eae2;-webkit-tap-highlight-color:transparent}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #d2ad8d;outline-offset:3px}
+  .app{position:relative;isolation:isolate;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#1a1b28;--ink:#332d31;--paper:#fffdf7;--hair:rgba(67,46,45,.15);--chapter-color:#a17f6c;--subtle:#8b8080;--page-shadow:0 24px 90px #0d0c173c}
+  .app[data-theme="sepia"]{--ink:#514035;--paper:#f6eddb;--hair:rgba(94,64,39,.17);--chapter-color:#aa8263;--subtle:#958273}
+  .app[data-theme="dark"]{--ink:#e9e4e1;--paper:#252631;--hair:rgba(233,223,210,.12);--chapter-color:#c19f87;--subtle:#a6a1a9;--page-shadow:0 22px 86px #0007}
+  .app[data-theme="cinematic"]{--ink:#f2ece5;--paper:rgba(21,23,35,.80);--hair:rgba(244,236,225,.18);--chapter-color:#d7b391;--subtle:#a9a5a9;--page-shadow:0 26px 120px #0008}
+  .scene-background{position:absolute;inset:0;z-index:-2;overflow:hidden;background:radial-gradient(ellipse at 65% 0%,#664b51,#171823 70%)}
+  .scene-img{position:absolute;inset:-3%;background-size:cover;background-position:center;filter:blur(13px) brightness(.53) saturate(.8);transform:scale(1.05);opacity:0;transition:opacity 1.4s ease}
+  .scene-img.active{opacity:1}
+  .scene-veiling{position:absolute;inset:0;background:linear-gradient(100deg,rgba(20,20,30,.77),rgba(19,19,31,.4) 48%,rgba(16,17,29,.8));transition:background 1s ease}
+  .app[data-theme="cinematic"] .scene-img{filter:blur(8px) brightness(.67) saturate(.86)}
+  .app[data-theme="light"] .scene-img,.app[data-theme="sepia"] .scene-img{filter:blur(20px) brightness(.7) saturate(.62)}
+  .app[data-theme="light"] .scene-veiling,.app[data-theme="sepia"] .scene-veiling{background:rgba(16,15,23,.65)}
+  .hidden{display:none!important}
+  .icon{width:19px;height:19px;display:inline-block;flex:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;fill:none}
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:transparent;color:inherit;padding:10px;border-radius:9px;transition:background .2s,color .2s}
+  .icon-btn:hover{background:#ffffff16}
+  .eyebrow{font-size:10px;letter-spacing:.32em;text-transform:uppercase;font-weight:650}
+  /* COVER */
+  .cover{position:absolute;inset:0;display:grid;place-items:center;overflow:auto;padding:max(24px,env(safe-area-inset-top)) 20px max(26px,env(safe-area-inset-bottom));z-index:5;background:linear-gradient(115deg,#151724e8,#241e2a94 48%,#17131af0),url('images/cover.jpg') center/cover no-repeat}
+  .cover::before{content:'';position:absolute;inset:16px;border:1px solid #eecbb51f;pointer-events:none}
+  .cover-inner{text-align:center;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:min(760px,100%);width:min(92vw,580px);padding:18px 8px}
+  .cover-mark{display:flex;align-items:center;gap:13px;color:#dcb899;font-size:11px;letter-spacing:.33em;font-weight:700}
+  .cover-mark::before,.cover-mark::after{content:'';display:block;width:34px;height:1px;background:#c19a7a91}
+  .cover-symbol{margin:clamp(40px,9vh,83px) 0 26px;width:56px;height:56px;border:1px solid #ebcab879;border-radius:50%;display:grid;place-items:center;font-family:Georgia,serif;color:#e7c5ad;font-size:25px;font-style:italic}
+  .cover h1{margin:0;font-family:Georgia,'Times New Roman',serif;font-size:clamp(46px,7.6vw,82px);line-height:1.07;font-weight:400;letter-spacing:-.055em;color:#f9eee7;text-shadow:0 5px 50px #0004}
+  .cover-sub{margin:16px 0 0;color:#dec6b7;letter-spacing:.22em;font-family:Georgia,serif;font-style:italic;font-size:clamp(13px,2.8vw,17px)}
+  .cover-divider{width:1px;height:clamp(33px,7vh,61px);background:linear-gradient(#f4ceaa8a,transparent);margin:34px auto 14px}
+  .cover-description{font-size:13px;line-height:2.15;letter-spacing:.06em;color:#e8dcd5bf;margin:0 0 31px}
+  .cover-actions{display:flex;flex-direction:column;width:min(320px,90%);gap:11px}
+  .primary-action{background:#ebd2bd;border:1px solid #fff3e5;color:#3e3030;border-radius:5px;padding:17px 24px;font-size:13px;letter-spacing:.06em;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 7px 33px #0b0a131f;transition:transform .2s,background .2s}
+  .primary-action:hover{background:#fff0e0;transform:translateY(-2px)}
+  .secondary-action{background:#16162037;color:#f1e3db;border:1px solid #f9e6d15b;border-radius:5px;padding:15px 24px;font-size:13px;letter-spacing:.04em;transition:background .2s}
+  .secondary-action:hover{background:#ffffff18}
+  .resume-text{min-height:20px;margin:18px 0 0;font-size:11px;color:#dec7b5b0;letter-spacing:.02em}
+  .cover-foot{position:relative;margin-top:clamp(23px,6vh,64px);display:flex;gap:11px;align-items:center;font-size:10px;letter-spacing:.2em;color:#d4b5a4a1}
+  .cover-foot .dot{width:3px;height:3px;border-radius:50%;background:#c2a29b}
+  /* READER */
+  .reader{position:absolute;inset:0;display:grid;grid-template-rows:68px minmax(0,1fr) 98px;z-index:2;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .reader-top{max-width:1330px;width:100%;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:10px;color:#f6ede4;transition:opacity .25s,transform .25s}
+  .brand{display:inline-flex;align-items:center;gap:12px;letter-spacing:.18em;font:600 12px Georgia,serif;white-space:nowrap}
+  .brand-emblem{display:inline-grid;place-items:center;width:28px;height:28px;border:1px solid #e2c3a48a;border-radius:50%;font-style:italic;font-size:15px;color:#e6c6a7}
+  .top-center{font-size:11px;letter-spacing:.13em;color:#e8dbd1ac;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:40vw;text-align:center}
+  .top-actions{display:flex;gap:5px;align-items:center}
+  .top-actions .icon-btn{color:#f4e7db}
+  .top-actions .control-label{font-size:11px;letter-spacing:.02em}
+  .reading-stage{position:relative;min-height:0;display:flex;align-items:stretch;justify-content:center;padding:2px 22px 0;touch-action:none;user-select:none;-webkit-user-select:none;perspective:1300px}
+  .book{width:min(710px,100%);height:100%;position:relative;display:flex;gap:3px;filter:drop-shadow(0 10px 35px #00000028);z-index:0}
+  .book.spread{width:min(1070px,100%);gap:2px}
+  .page-sheet{flex:1;min-width:0;height:100%;position:relative;overflow:hidden;background:var(--paper);border:1px solid var(--hair);box-shadow:var(--page-shadow);border-radius:3px;transition:background .45s,color .45s}
+  .book.spread .page-sheet:first-child{border-radius:4px 0 0 4px;box-shadow:inset -20px 0 24px -20px #0004,0 20px 65px #0003}
+  .book.spread .page-sheet:last-child{border-radius:0 4px 4px 0;box-shadow:inset 20px 0 24px -20px #0003,0 20px 65px #0003}
+  .book:not(.spread) .page-sheet:nth-child(2){display:none}
+  .page-copy{position:absolute;inset:0;padding:clamp(26px,5.4vh,64px) var(--side-space) clamp(25px,5vh,55px);overflow:hidden;color:var(--ink);font-family:var(--reading-font);font-size:var(--font-size);line-height:var(--line-height);font-weight:400;letter-spacing:-.015em;word-break:keep-all;overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+  .page-copy p{margin:0 0 1.13em;white-space:pre-wrap}
+  .chapter-head{padding-top:clamp(2px,2vh,20px);padding-bottom:clamp(23px,6vh,55px)}
+  .chapter-head .chapter-number{display:block;color:var(--chapter-color);font:600 11px/1.7 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.28em;margin-bottom:22px}
+  .chapter-head h2{font-size:clamp(24px,1.7em,37px);font-weight:500;line-height:1.45;margin:0;letter-spacing:-.05em}
+  .chapter-head .chapter-underline{display:block;width:43px;height:1px;background:var(--chapter-color);opacity:.65;margin-top:25px}
+  .scene-divider{position:relative;text-align:center;color:var(--chapter-color);font-size:13px;letter-spacing:.7em;padding:10px 0 25px}
+  .empty-ending{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:italic 18px Georgia,serif;letter-spacing:.22em;color:var(--subtle);opacity:.45}
+  .page-turn-overlay{position:absolute;inset:0;z-index:3;pointer-events:none;perspective:1350px;overflow:visible}
+  .turn-copy{position:absolute;top:0;bottom:0;background:var(--paper);overflow:hidden;transform-style:preserve-3d;backface-visibility:hidden;box-shadow:0 18px 58px #0005;will-change:transform,opacity}
+  .turn-copy.forward{transform-origin:0% 50%;animation:page-next var(--speed) cubic-bezier(.23,.64,.19,1) forwards}
+  .turn-copy.back{transform-origin:100% 50%;animation:page-back var(--speed) cubic-bezier(.23,.64,.19,1) forwards}
+  @keyframes page-next{0%{transform:perspective(1400px) rotateY(0deg);opacity:1;filter:brightness(1)}55%{filter:brightness(.81)}100%{transform:perspective(1400px) rotateY(-69deg) translateX(-6%);opacity:0;filter:brightness(.7)}}
+  @keyframes page-back{0%{transform:perspective(1400px) rotateY(0deg);opacity:1}100%{transform:perspective(1400px) rotateY(69deg) translateX(6%);opacity:0}}
+  .edge-hint{position:absolute;top:50%;transform:translateY(-50%);height:44px;width:44px;border:1px solid #e9d5c349;background:#15151e36;color:#eee1d7;border-radius:50%;display:grid;place-items:center;opacity:0;transition:opacity .25s;pointer-events:none}
+  .edge-hint.prev{left:max(9px,calc((100vw - 1220px)/2 - 5px))}
+  .edge-hint.next{right:max(9px,calc((100vw - 1220px)/2 - 5px))}
+  @media(hover:hover) and (pointer:fine){.reading-stage:hover .edge-hint{opacity:.75}}
+  .reader-bottom{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;transition:opacity .25s,transform .25s;color:#f5eae0}
+  .progress-area{display:flex;align-items:center;gap:16px;width:min(710px,calc(100% - 56px))}
+  .page-count{font:500 11px Georgia,serif;color:#eee6df;white-space:nowrap;letter-spacing:.1em;font-variant-numeric:tabular-nums;min-width:91px}
+  .story-progress{appearance:none;-webkit-appearance:none;flex:1;min-width:0;outline:none;cursor:pointer;background:linear-gradient(to right,#e7c1a0 0%,#e7c1a0 var(--progress,0%),#ffffff4a var(--progress,0%),#ffffff4a 100%);height:2px;border-radius:99px}
+  .story-progress::-webkit-slider-thumb{appearance:none;width:11px;height:11px;background:#f3cfaf;border:2px solid #3b3032;border-radius:50%;box-shadow:0 0 0 2px #f3cfaf4a}
+  .story-progress::-moz-range-thumb{width:10px;height:10px;background:#f3cfaf;border:0;border-radius:50%}
+  .progress-percent{font:500 11px Georgia,serif;min-width:31px;text-align:right;color:#f0d8c7}
+  .player-area{display:flex;justify-content:center;align-items:center;gap:13px;min-height:30px;width:100%}
+  .player-area .icon-btn{padding:6px}
+  .music-indicator{display:flex;gap:6px;align-items:center;max-width:220px;min-width:0;font-size:11px;letter-spacing:.01em;color:#e3d2c5;white-space:nowrap}
+  .music-indicator span{overflow:hidden;text-overflow:ellipsis}
+  .music-indicator .live-mark{width:5px;height:5px;background:#c8a383;border-radius:50%;flex:none;box-shadow:0 0 0 3px #d9aa7c24}
+  .volume-slider{width:80px;accent-color:#e1b590;height:14px;cursor:pointer}
+  .silent-icon{opacity:.67}
+  .chrome-hidden .reader-top{opacity:0;transform:translateY(-13px);pointer-events:none}
+  .chrome-hidden .reader-bottom{opacity:0;transform:translateY(13px);pointer-events:none}
+  /* SIDE DRAWER */
+  .scrim{position:absolute;inset:0;z-index:7;background:#05060bc4;opacity:0;transition:opacity .25s;pointer-events:none}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:absolute;right:0;top:0;bottom:0;z-index:8;width:min(420px,100%);background:#24252e;color:#f4ede8;box-shadow:-20px 0 70px #0008;transform:translateX(102%);transition:transform .32s cubic-bezier(.2,.75,.25,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .drawer.open{transform:translateX(0)}
+  .drawer-header{padding:26px 26px 19px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #fff2}
+  .drawer-title{font:400 26px Georgia,serif;letter-spacing:-.03em;margin:5px 0 0}
+  .drawer-body{overflow-y:auto;overflow-x:hidden;padding:23px 26px 40px;overscroll-behavior:contain}
+  .setting-group{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid #ffffff1c}
+  .setting-group:last-child{border:0}
+  .group-title{font-size:11px;font-weight:700;letter-spacing:.13em;color:#c1a491;margin-bottom:17px}
+  .theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .theme-option{border:1px solid #ffffff24;background:#ffffff0c;color:#e5d9d2;padding:10px 2px 9px;border-radius:7px;font-size:10px;text-align:center}
+  .theme-option.active{border-color:#daba9a;color:#f8e3cb;background:#d9b99823}
+  .swatch{display:block;width:33px;height:33px;margin:0 auto 9px;border-radius:50%;border:1px solid #ffffff22}
+  .swatch.light{background:#fffdf7}.swatch.sepia{background:#f6eddb}.swatch.dark{background:#242631}.swatch.cinematic{background:linear-gradient(130deg,#715262,#1f2734)}
+  .setting-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:18px 0}
+  .setting-row label{font-size:12px;color:#e2d6cf}
+  .setting-control{display:flex;align-items:center;gap:8px}
+  .setting-control input[type=range]{accent-color:#d8b18b;width:128px;cursor:pointer}
+  .setting-value{font:12px Georgia,serif;color:#cdb9a9;width:43px;text-align:right}
+  .setting-select{border:1px solid #ffffff2a;background:#363741;color:#e9dfd9;border-radius:6px;padding:9px;font-size:12px;max-width:180px}
+  .toggle{position:relative;width:40px;height:23px;border:1px solid #ffffff38;border-radius:20px;background:#50505a;transition:background .2s;flex:none}
+  .toggle[aria-checked="true"]{background:#a98769}
+  .toggle::after{content:'';position:absolute;left:3px;top:3px;width:15px;height:15px;background:#eee7e1;border-radius:50%;transition:transform .2s}
+  .toggle[aria-checked="true"]::after{transform:translateX(16px)}
+  .drawer-note{font-size:11px;line-height:1.85;color:#a9a2a4;margin-top:8px}
+  .chapter-list{display:flex;flex-direction:column;gap:9px}
+  .chapter-card{text-align:left;display:flex;gap:16px;align-items:flex-start;width:100%;border:1px solid #ffffff24;border-radius:7px;padding:18px 15px;background:#ffffff07;color:#f5e5dc}
+  .chapter-card:hover,.chapter-card.active{background:#bfa0851c;border-color:#bba0838b}
+  .chapter-card .num{font:italic 22px Georgia,serif;color:#cda98d}
+  .chapter-card strong{display:block;font-size:14px;font-weight:550;margin:2px 0 7px}
+  .chapter-card small{font-size:11px;color:#bbb0ad;letter-spacing:.01em}
+  .drawer-back{border:1px solid #d4b08f66;border-radius:5px;background:transparent;color:#ead6c4;padding:11px 17px;font-size:12px;width:100%;margin-top:10px}
+  .toast{position:absolute;bottom:calc(110px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,12px);padding:11px 17px;background:#181920ee;color:#f8e9de;border:1px solid #ddc7b64a;box-shadow:0 12px 38px #0005;border-radius:6px;font-size:12px;text-align:center;z-index:12;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;white-space:normal;max-width:min(400px,90vw)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .screen-reader-only{position:absolute!important;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;width:1px;height:1px;padding:0;margin:-1px;border:0}
+  @media(max-width:690px){
+    :root{--side-space:clamp(22px,7vw,36px)}
+    .reader{grid-template-rows:54px minmax(0,1fr) 91px}
+    .reader-top{padding:0 15px}
+    .brand{font-size:10px;gap:8px;letter-spacing:.12em}
+    .brand-emblem{width:25px;height:25px;font-size:13px}
+    .top-center{max-width:38vw;font-size:10px;letter-spacing:.02em}
+    .top-actions{gap:0}
+    .top-actions .control-label{display:none}
+    .top-actions .icon-btn{padding:7px}
+    .reading-stage{padding:0 10px}
+    .book{width:100%}
+    .page-copy{padding-top:clamp(21px,4.2vh,40px);padding-bottom:clamp(19px,4vh,36px)}
+    .chapter-head{padding-top:8px;padding-bottom:24px}
+    .chapter-head .chapter-number{margin-bottom:13px}
+    .chapter-head .chapter-underline{margin-top:16px}
+    .reader-bottom{gap:8px}
+    .progress-area{width:calc(100% - 38px);gap:10px}
+    .page-count{min-width:72px;font-size:10px}
+    .progress-percent{font-size:10px}
+    .player-area{gap:10px}
+    .music-indicator{max-width:160px;font-size:10px}
+    .volume-slider{width:54px}
+    .edge-hint{display:none}
+  }
+  @media(max-width:360px){.music-indicator{max-width:112px}.reader{grid-template-rows:50px minmax(0,1fr) 82px}.reader-top{padding:0 8px}.page-copy{padding-top:18px;padding-bottom:17px}}
+  @media(max-height:610px){.reader{grid-template-rows:48px minmax(0,1fr) 67px}.reader-bottom{gap:4px}.chapter-head{padding-bottom:14px}.chapter-head .chapter-number{margin-bottom:8px}.page-copy{padding-top:18px;padding-bottom:16px}.cover-symbol{margin:18px 0}.cover-divider{height:18px;margin-top:16px}.cover-foot{margin-top:15px}}
+  @media(prefers-reduced-motion:reduce){:root{--speed:0ms}.scene-img,.scene-veiling,.drawer,.scrim,.reader-top,.reader-bottom,.toast,.primary-action{transition:none!important}.turn-copy{animation:none!important}}
+  /* CONTENT STUDIO: self-contained authoring interface, no remote account required */
+  .studio-launch{border:1px solid #e7d4c36a;background:#16162041;color:#ecdfd4;border-radius:5px;padding:10px 17px;font-size:12px;letter-spacing:.02em;cursor:pointer}
+  .studio-launch:hover{background:#ffffff16}
+  .studio{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;background:#161820;color:#eee7e1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .studio *{box-sizing:border-box}
+  .studio-header{min-height:75px;border-bottom:1px solid #ffffff19;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px clamp(15px,3vw,39px)}
+  .studio-header strong{font:500 25px Georgia,serif;color:#f5ded0;letter-spacing:-.03em}
+  .studio-header small{display:block;font-size:10px;letter-spacing:.19em;color:#c6a991;margin-bottom:6px}
+  .studio-top-actions{display:flex;gap:9px;align-items:center}
+  .studio-shell{display:grid;grid-template-columns:260px minmax(0,1fr);flex:1;min-height:0;max-width:1500px;width:100%;margin:auto}
+  .studio-sidebar{border-right:1px solid #ffffff19;overflow:auto;padding:23px 15px;background:#1c1e27}
+  .studio-side-title{font-size:10px;letter-spacing:.16em;font-weight:750;color:#bca18d;margin:0 8px 15px}
+  .studio-chapter{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:#e6dbd4;display:flex;gap:12px;align-items:flex-start;padding:13px 10px;margin:0 0 4px;border-radius:8px}
+  .studio-chapter:hover,.studio-chapter.active{border-color:#caad8d64;background:#d0af8b17}
+  .studio-chapter .num{font:italic 20px Georgia,serif;color:#d7ae8e}
+  .studio-chapter strong{display:block;font-size:13px;font-weight:650;line-height:1.7}
+  .studio-chapter small{display:block;font-size:10px;color:#ad9e9c;margin-top:3px;line-height:1.5;max-width:165px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .studio-main{min-height:0;overflow:auto;padding:28px clamp(18px,3.2vw,54px) 70px;overscroll-behavior:contain}
+  .studio-section{max-width:890px;margin:auto}
+  .studio-muted{font-size:12px;color:#baaeb0;line-height:1.85}
+  .studio-h2{font:400 29px Georgia,'Malgun Gothic',serif;margin:0 0 9px;color:#f5e7dd;line-height:1.4}
+  .studio-kicker{font-size:11px;letter-spacing:.19em;color:#c7a88d;margin:0 0 8px}
+  .studio-callout{padding:13px 16px;background:#cba7860d;border:1px solid #d2b3923b;color:#d8c5b8;font-size:12px;line-height:1.9;border-radius:8px;margin:18px 0 28px}
+  .studio-field{display:block;min-width:0;margin:17px 0}
+  .studio-field>span,.studio-label{display:block;font-size:11px;color:#c7b29f;letter-spacing:.02em;margin-bottom:9px;font-weight:700}
+  .studio-input,.studio-textarea,.studio-select{width:100%;min-width:0;outline:0;border:1px solid #ffffff2c;background:#252833;color:#f3e7df;border-radius:7px;font-size:13px;padding:12px 14px;line-height:1.7}
+  .studio-textarea{min-height:320px;resize:vertical;line-height:2;letter-spacing:.005em;font-family:'AppleMyungjo','Batang',Georgia,serif}
+  .studio-input:focus,.studio-textarea:focus,.studio-select:focus{border-color:#e0b693;box-shadow:0 0 0 2px #c2997633}
+  .studio-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .studio-panel{border:1px solid #ffffff23;border-radius:9px;background:#ffffff06;padding:16px;margin:17px 0}
+  .studio-panel h3{font-weight:650;font-size:14px;margin:0 0 14px;color:#e8d3c1}
+  .studio-media-note{font-size:11px;color:#bbadb0;line-height:1.8;overflow-wrap:anywhere;min-height:23px}
+  .studio-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:15px 0}
+  .studio-btn{border:1px solid #cab39950;background:#ffffff08;color:#eaded4;border-radius:6px;padding:10px 14px;font-size:12px;line-height:1.4;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:39px}
+  .studio-btn:hover{background:#d8b39420}
+  .studio-btn.primary{background:#e6c6aa;color:#2a2830;border-color:#e6c6aa;font-weight:750}
+  .studio-btn.primary:hover{background:#f0d6bc}
+  .studio-btn.danger{border-color:#bf767853;color:#efa6a3}
+  .studio-btn:disabled{opacity:.45;cursor:not-allowed}
+  .studio-hr{height:1px;background:#ffffff25;margin:26px 0;border:0}
+  .studio-scene{border:1px solid #b59b8844;background:#1d2028;border-radius:10px;margin:14px 0;padding:16px}
+  .studio-scene-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .studio-scene-header strong{color:#e3c3a5;font-size:13px}
+  .studio-scene-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .studio-bottom-actions{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:22px 0}
+  .studio-status{font-size:11px;color:#b5cdb7;line-height:1.7;min-height:17px}
+  .studio-publish-step{display:flex;gap:13px;margin:13px 0;padding:14px;background:#ffffff08;border:1px solid #ffffff20;border-radius:8px;align-items:flex-start}
+  .studio-publish-step b{color:#ebc9a9;white-space:nowrap}
+  .studio-publish-step p{margin:0;font-size:12px;line-height:1.9;color:#daccc4}
+  .studio-preview{width:100%;max-height:160px;object-fit:cover;display:block;border-radius:7px;border:1px solid #ffffff26;margin:11px 0}
+  .studio-inline-tools{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+  .studio-hidden-input{display:none!important}
+  @media(max-width:760px){
+    .studio-header{min-height:67px;padding:11px 13px}.studio-header strong{font-size:20px}.studio-header small{font-size:9px}
+    .studio-shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+    #studioChapterList{display:flex;gap:7px;align-items:stretch;flex:none}
+    .studio-sidebar{border-right:0;border-bottom:1px solid #ffffff25;overflow-x:auto;overflow-y:hidden;display:flex;align-items:center;gap:7px;padding:9px 10px;min-height:83px;scrollbar-width:thin}
+    .studio-side-title{display:none}.studio-chapter{width:max-content;min-width:123px;max-width:172px;padding:8px 9px;margin:0;flex:none;gap:7px;align-self:stretch}.studio-chapter .num{font-size:16px}.studio-chapter strong{font-size:11px}.studio-chapter small{max-width:122px;font-size:9px}
+    .studio-main{padding:22px 14px 50px}.studio-h2{font-size:24px}.studio-grid,.studio-scene-grid{grid-template-columns:1fr}
+    .studio-panel{padding:13px}.studio-top-actions .studio-btn{padding:8px;font-size:11px}
+  }
+</style>
+</head>
+<body>
+<svg class="hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l-2 2a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5h-2.8a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-2-2a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H5v-2.8a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l2-2a1.6 1.6 0 0 0 1.7.3 1.6 1.6 0 0 0 1-1.5h2.8a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.7-.3l2 2a1.6 1.6 0 0 0-.3 1.7 1.6 1.6 0 0 0 1.5 1V14a1.6 1.6 0 0 0-1.2 1z" transform="translate(-.5 -.5)"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm13-2a7 7 0 0 1 0 10m2-13a11 11 0 0 1 0 16"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm13-1 5 8m0-8-5 8"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v11h14V10m-10 11v-7h6v7"/></symbol>
+</svg>
+<div class="app" id="app" data-theme="sepia">
+  <div class="scene-background" aria-hidden="true"><div class="scene-img active" id="sceneA"></div><div class="scene-img" id="sceneB"></div><div class="scene-veiling"></div></div>
+  <section class="cover" id="coverScreen" aria-label="소설 표지">
+    <div class="cover-inner">
+      <span class="cover-mark">AN IMMERSIVE READING EXPERIENCE</span>
+      <div class="cover-symbol">S<span style="font-size:14px;margin:0 2px">&amp;</span>S</div>
+      <h1>Story <span style="font-style:italic;font-size:.85em">&amp;</span><br>Sound</h1>
+      <p class="cover-sub">A story you can hear.</p>
+      <div class="cover-divider"></div>
+      <p class="cover-description">문장 사이로 음악이 흐르고,<br>페이지마다 하나의 장면이 되는 시간.</p>
+      <div class="cover-actions">
+        <button class="primary-action" id="startWithMusic" type="button"><svg class="icon"><use href="#i-play"/></svg> 이야기 시작하기</button>
+        <button class="secondary-action" id="startSilent" type="button">음악 없이 시작하기</button>
+        <button type="button" class="studio-launch" id="studioCoverButton">✦ 관리자 · 소설과 음악 편집</button>
+      </div>
+      <p id="resumeHint" class="resume-text"></p>
+      <div class="cover-foot"><span>READ</span><span class="dot"></span><span>LISTEN</span><span class="dot"></span><span>FEEL</span></div>
+    </div>
+  </section>
+  <div class="reader hidden" id="reader" aria-label="소설 독서 화면">
+    <header class="reader-top" id="readerTop">
+      <div class="brand"><span class="brand-emblem">S</span><span>STORY &amp; SOUND</span></div>
+      <div class="top-center" id="currentChapterName">CHAPTER 01 · 첫 만남</div>
+      <div class="top-actions">
+        <button type="button" class="icon-btn" id="tocButton" aria-label="챕터 목차 열기" title="목차"><svg class="icon"><use href="#i-menu"/></svg><span class="control-label">목차</span></button>
+        <button type="button" class="icon-btn" id="settingsButton" aria-label="독서 설정 열기" title="설정"><svg class="icon"><use href="#i-settings"/></svg></button>
+      </div>
+    </header>
+    <main class="reading-stage" id="readingStage" tabindex="-1" aria-label="왼쪽을 누르면 이전 페이지, 오른쪽을 누르면 다음 페이지, 중앙을 누르면 메뉴 표시를 전환합니다">
+      <div class="book" id="book">
+        <article class="page-sheet" id="sheetLeft"><div class="page-copy" id="pageLeft"></div></article>
+        <article class="page-sheet" id="sheetRight"><div class="page-copy" id="pageRight"></div></article>
+        <div class="page-turn-overlay" id="turnLayer"></div>
+      </div>
+      <div class="edge-hint prev"><svg class="icon"><use href="#i-left"/></svg></div>
+      <div class="edge-hint next"><svg class="icon"><use href="#i-right"/></svg></div>
+    </main>
+    <footer class="reader-bottom" id="readerBottom">
+      <div class="progress-area">
+        <span class="page-count" id="pageCount">01 / 01</span>
+        <label for="storyProgress" class="screen-reader-only">전체 이야기 읽기 위치</label>
+        <input id="storyProgress" class="story-progress" type="range" min="0" max="1000" value="0" aria-label="전체 이야기 읽기 진행률">
+        <span class="progress-percent" id="progressPercent">0%</span>
+      </div>
+      <div class="player-area">
+        <button class="icon-btn" id="playButton" type="button" aria-label="배경음악 재생"><svg class="icon" id="playIcon"><use href="#i-play"/></svg></button>
+        <div class="music-indicator" id="trackLabel" aria-live="polite"><span class="live-mark"></span><span id="trackText">BGM 준비됨</span></div>
+        <button class="icon-btn" id="muteButton" type="button" aria-label="음소거"><svg class="icon" id="muteIcon"><use href="#i-sound"/></svg></button>
+        <label for="volumeSlider" class="screen-reader-only">음악 볼륨</label>
+        <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="1" value="45" aria-label="음악 볼륨">
+        <button class="icon-btn" type="button" id="fullscreenButton" aria-label="전체 화면" title="전체 화면"><svg class="icon"><use href="#i-expand"/></svg></button>
+      </div>
+    </footer>
+  </div>
+  <div class="scrim" id="drawerScrim"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+    <div class="drawer-header"><div><div class="eyebrow" id="drawerEyebrow" style="color:#b89b89">THE READER'S ROOM</div><div class="drawer-title" id="drawerTitle">Reading settings</div></div><button class="icon-btn" id="drawerClose" aria-label="닫기"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-body" id="settingsContent">
+      <section class="setting-group"><div class="group-title">READING THEME · 독서 모드</div><div class="theme-grid" id="themeGrid">
+        <button type="button" class="theme-option" data-value="light"><span class="swatch light"></span>Light</button>
+        <button type="button" class="theme-option" data-value="sepia"><span class="swatch sepia"></span>Sepia</button>
+        <button type="button" class="theme-option" data-value="dark"><span class="swatch dark"></span>Dark</button>
+        <button type="button" class="theme-option" data-value="cinematic"><span class="swatch cinematic"></span>Cinematic</button>
+      </div></section>
+      <section class="setting-group"><div class="group-title">TYPOGRAPHY · 글자 설정</div>
+        <div class="setting-row"><label for="fontFamily">글꼴</label><select class="setting-select" id="fontFamily"><option value="serif">명조체 · Book</option><option value="sans">고딕체 · Modern</option></select></div>
+        <div class="setting-row"><label for="fontSize">글자 크기</label><div class="setting-control"><input id="fontSize" type="range" min="14" max="28" value="19"><span class="setting-value" id="fontSizeValue">19px</span></div></div>
+        <div class="setting-row"><label for="lineHeight">줄 간격</label><div class="setting-control"><input id="lineHeight" type="range" min="1.5" max="2.4" step=".05" value="1.95"><span class="setting-value" id="lineHeightValue">1.95</span></div></div>
+        <div class="setting-row"><label for="pageMargin">좌우 여백</label><div class="setting-control"><input id="pageMargin" type="range" min="18" max="74" step="2" value="48"><span class="setting-value" id="pageMarginValue">48px</span></div></div>
+      </section>
+      <section class="setting-group"><div class="group-title">PAGE &amp; MOTION · 화면 설정</div>
+        <div class="setting-row"><label for="motionToggle">페이지 전환 효과</label><button type="button" role="switch" class="toggle" id="motionToggle" aria-checked="true" aria-label="페이지 애니메이션"></button></div>
+        <div class="setting-row"><label for="sceneToggle">장면 배경 전환</label><button type="button" role="switch" class="toggle" id="sceneToggle" aria-checked="true" aria-label="장면 배경 전환"></button></div>
+        <div class="setting-row"><label for="spreadToggle">PC 양면 펼침 보기</label><button type="button" role="switch" class="toggle" id="spreadToggle" aria-checked="false" aria-label="양면 펼침 보기"></button></div>
+        <p class="drawer-note">양면 보기는 넓은 PC 화면(가로 1024px 이상)에서 적용됩니다. 페이지를 넘겨도 음악은 계속 재생됩니다.</p>
+      </section>
+      <section class="setting-group"><div class="group-title">CONTENT STUDIO · 콘텐츠 관리</div><button type="button" class="drawer-back" id="studioSettingsButton">✦ 관리자 모드 열기 · 원고 / BGM / 이미지</button><p class="drawer-note">편집은 이 브라우저에만 저장되며 공개 게시 시 content.json 파일을 배포해야 합니다.</p></section>
+      <section class="setting-group"><div class="group-title">OTHER · 기타</div><button class="drawer-back" id="returnCover" type="button">표지로 돌아가기</button><p class="drawer-note">읽은 위치와 글꼴·테마 설정은 이 브라우저에만 보관됩니다. 데이터는 외부 서버로 전송하지 않습니다.</p></section>
+    </div>
+    <div class="drawer-body hidden" id="chaptersContent"><div class="group-title">CONTENTS · 챕터 선택</div><nav id="chapterList" class="chapter-list" aria-label="챕터 목록"></nav></div>
+  </aside>
+  <section class="studio hidden" id="studioOverlay" role="dialog" aria-label="Story & Sound 관리자 편집 모드" aria-modal="true">
+    <header class="studio-header">
+      <div><small>STORY & SOUND · CONTENT STUDIO</small><strong>Content Studio</strong></div>
+      <div class="studio-top-actions">
+        <button type="button" class="studio-btn" id="studioEditTab">원고 편집</button>
+        <button type="button" class="studio-btn" id="studioPublishTab">배포 · 백업</button>
+        <button type="button" class="studio-btn" id="studioClose" aria-label="관리자 닫기">✕ 닫기</button>
+      </div>
+    </header>
+    <div class="studio-shell">
+      <aside class="studio-sidebar" aria-label="편집할 챕터 선택">
+        <div class="studio-side-title">CHAPTERS · 챕터 관리</div>
+        <div id="studioChapterList"></div>
+        <button type="button" id="studioAddChapter" class="studio-btn" style="width:100%;margin-top:14px;flex:none">＋ 새 챕터</button>
+      </aside>
+      <main class="studio-main" id="studioMain">
+        <section class="studio-section" id="studioEditorPanel">
+          <p class="studio-kicker" id="studioChapterLabel">CHAPTER 01</p>
+          <h2 class="studio-h2">소설 원고 및 음악 관리</h2>
+          <p class="studio-muted">챕터별 소설 원고를 직접 입력하거나 TXT로 가져오고, 음악과 배경을 설정하세요. 모든 업로드 파일은 먼저 현재 브라우저에 보관됩니다.</p>
+          <div class="studio-grid">
+            <label class="studio-field"><span>챕터 제목</span><input type="text" id="studioTitle" class="studio-input" maxlength="140" placeholder="예: 첫 만남"></label>
+            <label class="studio-field"><span>목차 설명</span><input type="text" id="studioDescription" class="studio-input" maxlength="260" placeholder="챕터 소개 문구"></label>
+          </div>
+          <label class="studio-field"><span>원고 · 빈 줄로 문단 분리 / --- 로 장면 구분선</span><textarea id="studioManuscript" class="studio-textarea" spellcheck="false" placeholder="첫 번째 문단을 입력하세요.&#10;&#10;다음 문단입니다.&#10;&#10;---&#10;&#10;장면이 바뀝니다."></textarea></label>
+          <div class="studio-actions"><button type="button" class="studio-btn" id="studioLoadTXT">↑ TXT 원고 불러오기</button><span class="studio-muted">UTF-8 텍스트 파일을 권장합니다. 기존 원고를 교체합니다.</span></div>
+          <div class="studio-grid">
+            <div class="studio-panel">
+              <h3>♪ 이 챕터의 기본 BGM</h3>
+              <div class="studio-media-note" id="studioBgmCurrent">음악 미설정</div>
+              <label class="studio-field"><span>곡 제목</span><input class="studio-input" id="studioBgmName" maxlength="140" placeholder="예: First Light"></label>
+              <div class="studio-actions"><button type="button" class="studio-btn" id="studioUploadBgm">MP3 업로드</button><button type="button" class="studio-btn" id="studioRemoveBgm">음악 해제</button></div>
+            </div>
+            <div class="studio-panel">
+              <h3>▣ 이 챕터의 기본 배경</h3>
+              <div class="studio-media-note" id="studioBgCurrent">배경 미설정</div>
+              <div class="studio-actions"><button type="button" class="studio-btn" id="studioUploadBg">이미지 업로드</button><button type="button" class="studio-btn" id="studioRemoveBg">배경 해제</button></div>
+              <p class="studio-muted">JPG, PNG, WEBP, GIF 지원. 본문은 영화적인 흐림 배경 위에 표시됩니다.</p>
+            </div>
+          </div>
+          <hr class="studio-hr">
+          <h2 class="studio-h2" style="font-size:23px">장면별 연출 · Scene Timeline</h2>
+          <p class="studio-muted">음악이나 배경이 바뀌는 지점을 문단으로 지정하세요. 한 챕터에 여러 장면을 추가할 수 있습니다. 다음 장면까지 이전 설정이 유지됩니다.</p>
+          <div id="studioSceneList"></div>
+          <button type="button" class="studio-btn" id="studioAddScene">＋ 장면 전환 추가</button>
+          <hr class="studio-hr">
+          <div class="studio-bottom-actions">
+            <div class="studio-actions" style="margin:0">
+              <button type="button" class="studio-btn" id="studioMoveUp">↑ 순서 올리기</button>
+              <button type="button" class="studio-btn" id="studioMoveDown">↓ 순서 내리기</button>
+              <button type="button" class="studio-btn danger" id="studioDelete">챕터 삭제</button>
+            </div>
+            <button type="button" class="studio-btn primary" id="studioSave">변경 내용 저장</button>
+          </div>
+        </section>
+        <section class="studio-section hidden" id="studioPublishPanel">
+          <p class="studio-kicker">PUBLISH · BACKUP</p>
+          <h2 class="studio-h2">콘텐츠 배포 및 백업</h2>
+          <div class="studio-callout">이 페이지의 관리자 모드는 <strong>로컬 편집기</strong>입니다. 로그인이나 관리자 권한 인증을 제공하지 않으며, 다른 방문자가 자신의 브라우저에서 편집하더라도 공개 사이트는 변경되지 않습니다. 외부 공개는 <strong>content.json을 다운로드해서 GitHub에 직접 업로드</strong>해야 완료됩니다.</div>
+          <div class="studio-panel">
+            <h3>표지 이미지 교체</h3>
+            <div id="studioCoverName" class="studio-media-note">현재 표지: cover.jpg</div>
+            <div class="studio-actions"><button type="button" class="studio-btn" id="studioUploadCover">표지 이미지 업로드</button><button type="button" class="studio-btn" id="studioRemoveCover">기본 표지 사용</button></div>
+          </div>
+          <h3 style="font-size:16px;margin:27px 0 12px">웹사이트에 콘텐츠 게시</h3>
+          <div class="studio-publish-step"><b>STEP 01</b><p>원고와 장면 설정을 저장합니다. 아래 버튼을 누르면 MP3와 이미지가 내부에 포함된 <strong>content.json</strong> 파일이 생성됩니다.</p></div>
+          <div class="studio-publish-step"><b>STEP 02</b><p>GitHub 저장소의 <strong>index.html과 같은 폴더</strong>에 content.json 파일을 업로드하거나 기존 파일을 교체합니다.</p></div>
+          <div class="studio-publish-step"><b>STEP 03</b><p>GitHub Pages 배포가 끝나면 다른 기기에서 사이트를 새로고침하여 확인합니다. 음원이 많으면 JSON 파일이 매우 커질 수 있습니다.</p></div>
+          <button type="button" class="studio-btn primary" id="studioExportButton" style="width:100%;margin:15px 0">↓ 게시 및 백업용 content.json 다운로드</button>
+          <hr class="studio-hr">
+          <h3 style="font-size:16px">다른 브라우저에서 원고 이어 편집하기</h3>
+          <p class="studio-muted">내보낸 content.json을 다른 기기에서 가져올 수 있습니다. 원고·장면별 음악·이미지가 함께 복원됩니다. 가져오기는 이 브라우저에 저장된 초안을 교체합니다.</p>
+          <div class="studio-actions"><button type="button" class="studio-btn" id="studioImportButton">↑ content.json 가져오기</button><button type="button" class="studio-btn danger" id="studioRestoreButton">이 브라우저 초안 초기화</button></div>
+        </section>
+        <div id="studioStatus" class="studio-status" role="status" aria-live="polite">브라우저 저장 준비 중...</div>
+      </main>
+    </div>
+    <input type="file" id="studioImportFile" class="studio-hidden-input" accept="application/json,.json" aria-label="콘텐츠 가져오기">
+    <input type="file" id="studioTXTFile" class="studio-hidden-input" accept=".txt,text/plain" aria-label="TXT 원고 불러오기">
+    <input type="file" id="studioMediaFile" class="studio-hidden-input" aria-label="음원 또는 이미지 업로드">
+  </section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="measureHost" aria-hidden="true" style="position:fixed;left:-20000px;top:0;visibility:hidden;pointer-events:none;z-index:-10"><div class="page-sheet" id="measureSheet"><div class="page-copy" id="measureCopy"></div></div></div>
+</div>
+<script>
+'use strict';
+/* ============================================================================
+  1. 작품 데이터: 아래 STORY.chapters만 수정하면 UI 수정 없이 챕터를 추가할 수 있습니다.
+     bgm: {src:'music/example.mp3',title:'곡 제목'}  | background:'images/x.jpg'
+     blocks: {type:'p',text:'문단'}, {type:'divider'},
+             {type:'scene',music:{src:'music/new.mp3',title:'새 BGM'},background:'images/y.jpg'}
+     scene은 그 위치부터 다음 scene 또는 챕터 끝까지 유효합니다.
+     MP3가 없어도 모든 독서 기능은 정상 동작합니다.
+============================================================================ */
+let STORY = {
+  title:'Story & Sound', subtitle:'A story you can hear.',
+  chapters:[
+    {number:1,title:'첫 만남',description:'비 오는 오후, 우리가 처음 마주친 날',
+     bgm:{src:'music/chapter01.mp3',title:'First Light · 잔잔한 피아노'},background:'images/cafe.jpg',
+     blocks:[
+      {type:'p',text:'그날은 유난히 비가 많이 내렸다.'},
+      {type:'p',text:'창밖을 바라보던 그녀는 조용히 책장을 넘겼다. 책 한쪽에는 작은 연필 자국이, 테이블에는 식어 가는 카페라테가 놓여 있었다. 누가 보면 조금 쓸쓸한 오후라고 말했을 것이다. 그러나 그녀에게는 그런 시간이 가장 편안했다.'},
+      {type:'p',text:'유리창 너머 거리에는 우산들이 느리게 오갔다. 빨간 신호등이 젖은 아스팔트 위에 길게 번졌다. 카페 안에는 음악이 있었다. 어디선가 한 번쯤 들었을 법한, 제목은 알 수 없는 피아노곡.'},
+      {type:'divider'},
+      {type:'p',text:'그리고 그 순간, 카페 문이 열렸다.'},
+      {type:'p',text:'한 남자가 들어왔다. 젖은 어깨를 털고 짧게 숨을 고른 그는 카운터 앞에서 잠시 망설였다. 손에 든 휴대폰은 계속 울리고 있었지만, 그는 화면을 내려다보기만 할 뿐 받지 않았다.'},
+      {type:'p',text:'“아이스 아메리카노 하나요.”'},
+      {type:'p',text:'“이렇게 추운데 아이스로 드세요?” 바리스타가 웃으며 물었다.'},
+      {type:'p',text:'“습관이라서요.”'},
+      {type:'p',text:'별것 아닌 대화였다. 그런데 이상하게도 그녀는 그 한마디를 기억하게 되었다.'},
+      {type:'p',text:'남자는 빈자리를 찾았다. 하필이면 그녀의 맞은편, 작은 화분을 사이에 둔 단 한 자리만 남아 있었다.'},
+      {type:'p',text:'“여기, 앉아도 될까요?”'},
+      {type:'p',text:'그녀는 책에서 눈을 떼고 고개를 들었다. 그의 머리끝에서 빗방울 하나가 떨어졌다.'},
+      {type:'p',text:'“네. 괜찮아요.”'},
+      {type:'divider'},
+      {type:'p',text:'다시 고개를 숙이려던 찰나, 남자가 책 표지를 보고 말했다.'},
+      {type:'p',text:'“그 책, 재미있어요?”'},
+      {type:'p',text:'“아직은 잘 모르겠어요. 끝까지 읽어 봐야 알 것 같아서요.”'},
+      {type:'p',text:'“그럼 다 읽고 나서 알려 줄래요?”'},
+      {type:'p',text:'너무도 태연하게 내민 부탁에 그녀는 잠시 눈을 깜빡였다. 처음 만난 사람에게 결말을 물어보는 사람이라니.'},
+      {type:'p',text:'“다음에 또 마주치면요.”'},
+      {type:'p',text:'그가 작게 웃었다. 창밖의 비가 조금 약해졌다.'},
+      {type:'p',text:'그녀는 모르고 있었다. 자신의 인생에서 가장 긴 이야기가, 방금 그 짧은 대답으로 시작되었다는 것을.'}
+     ]},
+    {number:2,title:'비가 남긴 말',description:'서로를 알아갈수록 커지는 마음의 파문',
+     bgm:{src:'music/chapter02.mp3',title:'Unsaid Words · 저녁의 선율'},background:'images/cafe.jpg',
+     blocks:[
+      {type:'p',text:'그날 이후 두 사람은 같은 카페에서 자주 마주쳤다.'},
+      {type:'p',text:'처음에는 우연이었다. 두 번째에도 아마 우연이었을 것이다. 그러나 세 번째부터는 서로가 조금 먼저 와서 기다렸다는 사실을, 둘 다 굳이 묻지 않았다.'},
+      {type:'p',text:'그는 늘 바빴다. 통화가 많았고, 약속을 놓치곤 했고, 어느 순간에도 마음 한구석이 다른 곳을 향해 있는 것처럼 보였다. 그녀는 그런 그가 가끔 아주 어린아이처럼 웃는다는 사실을 발견했다.'},
+      {type:'p',text:'“좋아하는 게 뭐예요?” 어느 저녁, 그녀가 물었다.'},
+      {type:'p',text:'“글쎄. 이기는 거?”'},
+      {type:'p',text:'“그런 거 말고요. 그냥, 아무 이유 없이 좋은 거.”'},
+      {type:'p',text:'그는 대답하지 못했다. 쉬운 질문인 줄 알았는데, 오래 생각해도 떠오르지 않았다.'},
+      {type:'divider'},
+      {type:'p',text:'그녀는 대답 대신 창가의 그림을 가리켰다. 노란 조명 아래 걸린 작은 풍경화. 비가 그친 골목의 푸른 그림자와 그 끝에 남겨진 한 사람.'},
+      {type:'p',text:'“저는 저런 색이 좋아요. 슬퍼 보이는데, 보고 있으면 이상하게 따뜻해져요.”'},
+      {type:'p',text:'그는 한참 그림을 보더니 말했다.'},
+      {type:'p',text:'“나는 아직 그런 걸 잘 모르겠는데.”'},
+      {type:'p',text:'“그럼 천천히 보면 되죠.”'},
+      {type:'scene',background:'images/rain.jpg',music:{src:'music/scene_rain.mp3',title:'Rain on Glass · 빗소리의 기억'}},
+      {type:'p',text:'몇 주 뒤, 갑작스러운 소나기가 쏟아졌다.'},
+      {type:'p',text:'서로 약속했던 날이었다. 그녀는 우산도 없이 카페 처마 아래 서 있었고, 그는 한 시간이 지나서야 나타났다. 젖은 셔츠와 숨 가쁜 목소리, 그리고 미안하다는 말보다 먼저 쏟아지는 변명.'},
+      {type:'p',text:'“정말 중요한 일이었어. 어쩔 수 없었어.”'},
+      {type:'p',text:'“알아. 그런데 난 자꾸 네가 없는 자리에서 기다리게 돼.”'},
+      {type:'p',text:'남자는 대답하지 못했다. 말 한마디면 해결할 수 있을 것이라고 생각했던 일들이 실은 얼마나 많은 시간을 쌓아 두고 있었는지, 그는 이제야 조금 이해했다.'},
+      {type:'p',text:'“널 좋아하는 마음은 진짜야.”'},
+      {type:'p',text:'“그런데 좋아한다는 말이 나를 덜 외롭게 만들지는 않아.”'},
+      {type:'divider'},
+      {type:'p',text:'그날 밤, 그는 휴대폰을 내려놓고 오래도록 창밖을 바라보았다. 비는 멈췄지만, 무언가가 조금씩 멀어지고 있었다.'},
+      {type:'p',text:'그녀가 좋아한다고 했던 그림의 색이 떠올랐다. 슬퍼 보이는데 따뜻하다는 말. 이제는 그 뜻을 알 것 같았지만, 정작 그 말을 전해 줄 사람은 곁에 없었다.'}
+     ]},
+    {number:3,title:'다시, 같은 빛 아래',description:'시간을 건너 도착한 가장 익숙한 낯섦',
+     bgm:{src:'music/chapter03.mp3',title:'Five Years Later · 먼 길의 끝'},background:'images/gallery.jpg',
+     blocks:[
+      {type:'p',text:'다섯 해가 흘렀다.'},
+      {type:'p',text:'그동안 남자는 작은 회사를 세웠고, 처음으로 자신이 무언가를 오래 사랑할 수도 있다는 사실을 배웠다. 결과보다 사람을 먼저 보는 법도, 잘못한 일에 변명 없이 미안하다고 말하는 법도 조금씩 익혔다.'},
+      {type:'p',text:'그녀는 그림을 그렸다. 빛이 오래 머무는 창가와 누군가 떠난 자리에 남겨진 온기를 그렸다. 첫 개인전이 열리는 날, 그녀는 갤러리 구석의 작은 꽃다발들을 정리하고 있었다.'},
+      {type:'p',text:'유리문 너머로 사람들이 오갔다. 축하 인사와 카메라 셔터 소리가 한데 섞였다. 입구 옆에는 이번 전시회를 후원한 기업의 이름이 적혀 있었다.'},
+      {type:'p',text:'그 이름을 본 순간, 심장이 이상하게 뛰기 시작했다.'},
+      {type:'divider'},
+      {type:'p',text:'그는 늦은 오후에 갤러리에 도착했다. 바쁜 일정 중 잠깐 들를 생각이었지만, 그림 앞에 서자 발걸음이 멈췄다.'},
+      {type:'p',text:'비가 그친 골목의 푸른 그림자. 노란 조명. 그리고 그 끝에 작은 사람 하나.'},
+      {type:'p',text:'오래전 그녀가 카페에서 좋아한다고 했던 그림과 닮아 있었다. 하지만 이번에는 그 골목의 끝에서, 누군가를 향해 천천히 걸어오는 사람이 한 명 더 있었다.'},
+      {type:'p',text:'그는 제목을 읽었다.'},
+      {type:'p',text:'〈기다림의 끝〉'},
+      {type:'scene',background:'images/gallery.jpg',music:{src:'music/scene_reunion.mp3',title:'There You Were · 다시 만난 순간'}},
+      {type:'p',text:'“그 그림, 마음에 들어요?”'},
+      {type:'p',text:'등 뒤에서 들려온 목소리는 다섯 해의 시간을 단숨에 지워 버릴 만큼 익숙했다.'},
+      {type:'p',text:'그가 돌아섰다. 그녀도 그를 보고 있었다. 놀란 표정과 조금 어색한 웃음. 오래 알고 지낸 사람에게 처음 인사를 건네는 것처럼, 두 사람은 잠시 아무 말도 하지 않았다.'},
+      {type:'p',text:'“잘 지냈어?” 그가 먼저 물었다.'},
+      {type:'p',text:'“응. 너는?”'},
+      {type:'p',text:'“나도. 네 그림을 보러 왔어.”'},
+      {type:'p',text:'그녀가 웃었다. 예전보다 조금 더 깊고, 조금 더 단단한 미소였다.'},
+      {type:'divider'},
+      {type:'p',text:'“그때 물어봤던 책 있잖아.” 그녀가 말했다.'},
+      {type:'p',text:'“어떤 책?”'},
+      {type:'p',text:'“처음 만난 날, 끝까지 읽으면 어떤 이야기인지 알려 달라고 했던 책.”'},
+      {type:'p',text:'그는 마침내 기억해 냈다. 유난히 비가 많이 내리던 오후, 한 잔의 카페라테, 그리고 작은 화분 너머의 얼굴.'},
+      {type:'p',text:'“결말이 어땠어?”'},
+      {type:'p',text:'“아직 몰라.” 그녀가 잠시 생각하다 덧붙였다. “어쩌면, 이제 다시 쓰기 시작하는 이야기일지도.”'},
+      {type:'p',text:'그녀의 목소리 위로 잔잔한 피아노 선율이 흘렀다. 두 사람은 그림 앞에 나란히 섰다. 이번에는, 아무도 먼저 떠나지 않았다.'}
+     ]}
+  ]
+};
+
+/* ============================================================================
+  2. 상태 / DOM / 저장. UTF-16 오프셋으로 독서 위치를 보관합니다.
+============================================================================ */
+const $=id=>document.getElementById(id);
+const KEY='story-sound-reader-v1';
+const DEFAULT_PREFS={theme:'sepia',fontSize:19,lineHeight:1.95,pageMargin:48,fontFamily:'serif',motion:true,scenes:true,spread:false,volume:.45,muted:false};
+function readSaved(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');return x&&typeof x==='object'?x:null}catch(e){console.warn('읽기 상태 불러오기 실패:',e);return null}}
+const saved=readSaved();
+const pref={...DEFAULT_PREFS,...(saved?.prefs||{})};
+const state={chapter:Math.max(0,Math.min(STORY.chapters.length-1,Number(saved?.chapter)||0)),anchor:Math.max(0,Number(saved?.offset)||0),page:0,pages:[],started:false,isTurning:false,drawer:null,musicDesired:false};
+const refs={app:$('app'),reader:$('reader'),book:$('book'),stage:$('readingStage'),cover:$('coverScreen'),left:$('pageLeft'),right:$('pageRight'),measure:$('measureCopy'),measureSheet:$('measureSheet'),measureHost:$('measureHost')};
+let lengths=STORY.chapters.map(ch=>ch.blocks.reduce((n,b)=>n+(b.type==='p'?b.text.length+1:0),0));
+let totalLength=lengths.reduce((a,b)=>a+b,0)||1;
+const audioNodes=[new Audio(),new Audio()];
+audioNodes.forEach(a=>{a.loop=true;a.preload='none';a.volume=0});
+let audioSlot=0,currentTrackSrc='',audioEnabled=false,fadeFrame=0,fadeSerial=0,toastTimer=null,resizeTimer=null,backgroundShown='';
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({chapter:state.chapter,offset:state.anchor,prefs:pref}))}catch(e){console.warn('읽기 위치 저장 실패:',e)}}
+function toast(message){const x=$('toast');x.textContent=message;x.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>x.classList.remove('show'),3500)}
+function icon(id,ref){$(id).querySelector('use').setAttribute('href',ref)}
+function isSpread(){return pref.spread&&window.innerWidth>=1024}
+function updatePreferences(){
+  refs.app.dataset.theme=pref.theme;
+  refs.app.style.setProperty('--font-size',pref.fontSize+'px');
+  refs.app.style.setProperty('--line-height',pref.lineHeight);
+  refs.app.style.setProperty('--side-space',pref.pageMargin+'px');
+  refs.app.style.setProperty('--reading-font',pref.fontFamily==='sans'?"-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif":"Georgia,'AppleMyungjo','Batang',serif");
+  $('volumeSlider').value=Math.round(pref.volume*100);
+  for(const name of ['fontSize','lineHeight','pageMargin','fontFamily'])$(name).value=pref[name];
+  $('fontSizeValue').textContent=pref.fontSize+'px';
+  $('lineHeightValue').textContent=Number(pref.lineHeight).toFixed(2);
+  $('pageMarginValue').textContent=pref.pageMargin+'px';
+  for(const option of document.querySelectorAll('.theme-option'))option.classList.toggle('active',option.dataset.value===pref.theme);
+  [['motionToggle','motion'],['sceneToggle','scenes'],['spreadToggle','spread']].forEach(([id,k])=>$(id).setAttribute('aria-checked',String(pref[k])));
+  refs.book.classList.toggle('spread',isSpread());
+  updateAudioUI();
+}
+function textOffset(ch){let n=0;return ch.blocks.map(b=>{const result=n;if(b.type==='p')n+=b.text.length+1;return result})}
+function sceneAt(ch,anchor){const offsets=textOffset(ch);let current={background:ch.background,music:ch.bgm};ch.blocks.forEach((b,i)=>{if(b.type==='scene'&&offsets[i]<=anchor){current={background:b.background??current.background,music:b.music??current.music}}});return current}
+function setBackdrop(path){
+  path=path||STORY.cover||'images/cover.jpg';
+  if(backgroundShown===path)return;
+  const resolved=resolveAssetPath(path);
+  if(!resolved)return;
+  const src='url('+JSON.stringify(resolved)+')';
+  const a=$('sceneA'),b=$('sceneB');
+  const incoming=a.classList.contains('active')?b:a;
+  const outgoing=incoming===a?b:a;
+  incoming.style.backgroundImage=src;
+  incoming.classList.add('active');outgoing.classList.remove('active');backgroundShown=path;
+}
+function refreshScene(){
+  const ch=STORY.chapters[state.chapter];
+  const sceneAnchor=isSpread()&&state.pages[state.page+1]?state.pages[state.page+1].start:state.anchor;
+  const data=sceneAt(ch,sceneAnchor);
+  if(pref.scenes)setBackdrop(data.background);else setBackdrop(ch.background);
+  changeTrack(data.music?.src?{...data.music,src:resolveAssetPath(data.music.src)}:null);
+}
+/* ============================================================================
+  3. 오디오: Audio 객체 두 개를 유지해 track 변경 시 크로스페이드.
+     브라우저 자동재생 제한 때문에 첫 시작은 반드시 직접 버튼 클릭으로 실행합니다.
+============================================================================ */
+function effectiveVolume(){return pref.muted?0:Math.max(0,Math.min(1,pref.volume))}
+function updateAudioUI(){
+  const playing=audioEnabled&&!audioNodes[audioSlot].paused;
+  icon('playIcon',playing?'#i-pause':'#i-play');
+  $('playButton').setAttribute('aria-label',playing?'배경음악 일시정지':'배경음악 재생');
+  icon('muteIcon',pref.muted?'#i-mute':'#i-sound');
+  $('muteButton').setAttribute('aria-label',pref.muted?'음소거 해제':'음소거');
+}
+function tweenVolumes(from,to,duration,finished){
+  cancelAnimationFrame(fadeFrame);const serial=++fadeSerial;
+  const start=performance.now(),v1=from?.volume||0,v2=to?.volume||0;
+  const frame=now=>{
+    if(serial!==fadeSerial)return;
+    const t=Math.min(1,(now-start)/duration),e=t*t*(3-2*t),target=effectiveVolume();
+    if(from)from.volume=Math.max(0,v1*(1-e));
+    if(to)to.volume=Math.min(1,v2*(1-e)+target*e);
+    if(t<1)fadeFrame=requestAnimationFrame(frame);
+    else{if(from){from.pause();from.currentTime=0}if(to)to.volume=target;finished?.()}
+  };
+  fadeFrame=requestAnimationFrame(frame);
+}
+function stopFade(){cancelAnimationFrame(fadeFrame);++fadeSerial}
+function changeTrack(track){
+  const title=track?.title||'음악 없음';$('trackText').textContent=audioEnabled?title:'♪ '+title;
+  if(!track?.src){currentTrackSrc='';stopFade();audioNodes.forEach(a=>a.pause());updateAudioUI();return}
+  if(currentTrackSrc===track.src){updateAudioUI();return}
+  const previous=audioNodes[audioSlot];const wasPlaying=audioEnabled&&!previous.paused;
+  const incomingSlot=currentTrackSrc?1-audioSlot:audioSlot;
+  const incoming=audioNodes[incomingSlot];
+  stopFade();
+  if(incoming!==previous){incoming.pause();incoming.currentTime=0}
+  currentTrackSrc=track.src;
+  incoming.src=track.src;incoming.loop=true;incoming.preload='auto';incoming.volume=0;
+  const older=audioNodes[1-incomingSlot];
+  if(!audioEnabled){older.pause();incoming.pause();audioSlot=incomingSlot;updateAudioUI();return}
+  // play() is called synchronously from the click when this is the first track.
+  let promise;
+  try{promise=incoming.play()}catch(err){handleAudioError(err,incoming,older);return}
+  audioSlot=incomingSlot;
+  const onPlay=()=>{
+    if(incoming.src!==new URL(track.src,location.href).href)return;
+    if(wasPlaying&&older!==incoming)tweenVolumes(older,incoming,1050,updateAudioUI);
+    else{older!==incoming&&older.pause();tweenVolumes(null,incoming,400,updateAudioUI)}
+    updateAudioUI();
+  };
+  if(promise&&typeof promise.then==='function')promise.then(onPlay).catch(e=>handleAudioError(e,incoming,older));else onPlay();
+}
+function handleAudioError(error,node,older){
+  console.warn('[Story & Sound] BGM 로드/재생 실패:',node.currentSrc||node.src,error);
+  node.pause();older?.pause();audioEnabled=false;updateAudioUI();
+  if(error?.name==='NotAllowedError')toast('브라우저에서 음악 재생을 차단했습니다. 재생 버튼을 눌러 주세요.');
+  else toast('음악 파일을 불러오지 못했습니다. 소설은 계속 읽을 수 있습니다.');
+}
+audioNodes.forEach(a=>a.addEventListener('error',()=>{
+  const err=a.error;if(!err||!a.src||!audioEnabled)return;
+  if(a===audioNodes[audioSlot])handleAudioError(err,a,audioNodes[1-audioSlot]);
+}));
+function setAudioEnabled(on){
+  audioEnabled=on;state.musicDesired=on;
+  if(!on){stopFade();audioNodes.forEach(a=>a.pause());updateAudioUI();return}
+  const active=audioNodes[audioSlot];
+  if(!active.src){currentTrackSrc='';refreshScene();return}
+  try{const p=active.play();if(p?.then)p.then(()=>{tweenVolumes(null,active,400,updateAudioUI)}).catch(e=>handleAudioError(e,active));else{active.volume=effectiveVolume()}}catch(e){handleAudioError(e,active)}
+  updateAudioUI();
+}
+function updateVolume(){stopFade();audioNodes.forEach((a,i)=>{a.volume=i===audioSlot?effectiveVolume():0});updateAudioUI()}
+/* ============================================================================
+  4. 실제 렌더링 측정 기반 페이지 분할.
+     문단을 통째로 먼저 시도하고, 문단 하나가 화면보다 클 때만 텍스트를 나눕니다.
+     각 글자 UTF-16 오프셋을 유지하므로 글자 중복/누락이 없습니다.
+============================================================================ */
+function htmlPiece(piece,ch){
+  if(piece.type==='head')return '<div class="chapter-head"><span class="chapter-number">CHAPTER '+String(ch.number).padStart(2,'0')+'</span><h2>'+escapeHTML(ch.title)+'</h2><span class="chapter-underline"></span></div>';
+  if(piece.type==='divider')return '<div class="scene-divider" aria-label="장면 구분">· · ·</div>';
+  return '<p>'+escapeHTML(piece.text)+'</p>';
+}
+function fits(){return refs.measure.scrollHeight<=refs.measure.clientHeight+1}
+function testPiece(piece,ch){
+  const holder=document.createElement('div');holder.innerHTML=htmlPiece(piece,ch);const el=holder.firstElementChild;
+  refs.measure.appendChild(el);
+  const result=fits();
+  if(!result)el.remove();
+  return result;
+}
+function testCandidateFit(piece,ch){
+  const holder=document.createElement('div');holder.innerHTML=htmlPiece(piece,ch);const el=holder.firstElementChild;
+  refs.measure.appendChild(el);const result=fits();el.remove();return result;
+}
+function makeBreakpoints(text){const chars=Array.from(text);const boundaries=[0];let n=0;for(const c of chars){n+=c.length;boundaries.push(n)}return boundaries}
+function findBestFit(text,base,ch){
+  const bp=makeBreakpoints(text);
+  let low=1,high=bp.length-1,best=0;
+  while(low<=high){const mid=(low+high)>>1;const part={type:'p',text:text.slice(0,bp[mid]),offset:base};
+    if(testCandidateFit(part,ch)){best=mid;low=mid+1}else high=mid-1;
+  }
+  if(best<=0)return 0;
+  if(best===bp.length-1)return bp[best];
+  // Prefer ending at a natural sentence/word boundary when it doesn't waste too much space.
+  const fit=text.slice(0,bp[best]);
+  const boundary=Math.max(fit.lastIndexOf(' ')+1,fit.lastIndexOf('。')+1,fit.lastIndexOf('다.')+2,fit.lastIndexOf('요.')+2,fit.lastIndexOf('\n')+1);
+  return boundary>=Math.max(1,fit.length*.69)?boundary:bp[best];
+}
+function paginateChapter(ch){
+  const pages=[],blocks=ch.blocks,offsets=textOffset(ch);
+  refs.measure.replaceChildren();
+  let pieces=[],pageStart=0,pageEnd=0;
+  const push=()=>{if(pieces.length){pages.push({pieces,start:pageStart,end:pageEnd});pieces=[];refs.measure.replaceChildren()}};
+  const insert=(piece,at,end)=>{if(!pieces.length)pageStart=at;pieces.push(piece);pageEnd=end};
+  const add=(piece,at,end)=>{if(testPiece(piece,ch)){insert(piece,at,end);return true}return false};
+  const head={type:'head'};
+  if(add(head,0,0)===false){ // Tiny viewport fallback: omit chapter ornament; retain story text.
+    refs.measure.replaceChildren();
+  }
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i],at=offsets[i];
+    if(b.type==='scene'){if(pieces.some(p=>p.type==='p'))push();continue}
+    if(b.type==='divider'){
+      const piece={type:'divider'};
+      if(!add(piece,at,at)){push();add(piece,at,at)}
+      continue;
+    }
+    if(b.type!=='p')continue;
+    let remain=b.text,partOffset=0;
+    // Preserve even intentional empty paragraphs as blank lines.
+    if(remain.length===0){const empty={type:'p',text:''};if(!add(empty,at,at+1)){push();add(empty,at,at+1)}continue}
+    let safety=0;
+    while(remain.length&&safety++<100000){
+      const full={type:'p',text:remain,offset:at+partOffset};
+      if(add(full,at+partOffset,at+partOffset+remain.length+1)){partOffset+=remain.length;remain='';break}
+      // A whole paragraph fits on a blank page more naturally than splitting across pages.
+      if(pieces.length){
+        const hasVisibleText=pieces.some(p=>p.type==='p');
+        if(hasVisibleText||pieces.some(p=>p.type==='head'||p.type==='divider')){
+          push();
+          if(add(full,at+partOffset,at+partOffset+remain.length+1)){partOffset+=remain.length;remain='';break}
+        }
+      }
+      const count=findBestFit(remain,at+partOffset,ch);
+      if(!count){
+        // Extreme accessibility zoom / tiny viewport: never silently discard text.
+        // One grapheme is forced into the page; the page's actual size is the limiting factor.
+        if(pieces.length){push();continue}
+        const first=Array.from(remain)[0];const forced={type:'p',text:first,offset:at+partOffset};
+        refs.measure.insertAdjacentHTML('beforeend',htmlPiece(forced,ch));
+        insert(forced,at+partOffset,at+partOffset+first.length);partOffset+=first.length;remain=remain.slice(first.length);push();continue;
+      }
+      const part={type:'p',text:remain.slice(0,count),offset:at+partOffset};
+      if(!add(part,at+partOffset,at+partOffset+count)){
+        // Rare case: a trailing natural break is too long due to fonts changing mid-measure.
+        const first=Array.from(remain)[0];part.text=first;
+        if(!add(part,at+partOffset,at+partOffset+first.length)){
+          refs.measure.insertAdjacentHTML('beforeend',htmlPiece(part,ch));insert(part,at+partOffset,at+partOffset+first.length);
+        }
+        partOffset+=first.length;remain=remain.slice(first.length);
+      }else{partOffset+=count;remain=remain.slice(count)}
+      push();
+    }
+  }
+  push();
+  if(!pages.length)pages.push({pieces:[{type:'head'}],start:0,end:0});
+  return pages;
+}
+function targetPageForOffset(offset){
+  const a=Math.max(0,offset);let index=0;
+  for(let i=0;i<state.pages.length;i++)if(state.pages[i].start<=a)index=i;
+  // Scene-only transitions and chapter headers can share an offset. Choose the first
+  // page containing that location unless a later page begins exactly there.
+  return isSpread()?Math.floor(index/2)*2:index;
+}
+function ensureMeasurements(){
+  const rect=$('sheetLeft').getBoundingClientRect();
+  if(rect.width<100||rect.height<120)return false;
+  refs.measureHost.style.width=rect.width+'px';refs.measureHost.style.height=rect.height+'px';
+  refs.measureSheet.style.width=rect.width+'px';refs.measureSheet.style.height=rect.height+'px';
+  refs.measureSheet.style.flex='none';
+  return true;
+}
+function rebuildPages(restoreAnchor=true){
+  if(!state.started)return;
+  if(!ensureMeasurements())return;
+  refs.book.classList.toggle('spread',isSpread());
+  const ch=STORY.chapters[state.chapter];
+  state.pages=paginateChapter(ch);
+  state.page=targetPageForOffset(restoreAnchor?state.anchor:0);
+  renderPage({anchorFromPage:false});
+}
+function pageMarkup(page,ch){return page?page.pieces.map(p=>htmlPiece(p,ch)).join(''):'<div class="empty-ending">To be continued.</div>'}
+function renderPage({anchorFromPage=true}={}){
+  const ch=STORY.chapters[state.chapter];
+  const max=state.pages.length;
+  state.page=Math.max(0,Math.min(max-1,state.page));
+  if(isSpread())state.page=Math.floor(state.page/2)*2;
+  const current=state.pages[state.page],next=state.pages[state.page+1];
+  refs.left.innerHTML=pageMarkup(current,ch);
+  refs.right.innerHTML=isSpread()?pageMarkup(next,ch):'';
+  if(anchorFromPage)state.anchor=current?.start||0;
+  $('currentChapterName').textContent='CHAPTER '+String(ch.number).padStart(2,'0')+' · '+ch.title;
+  const visibleEnd=isSpread()&&next?state.page+2:state.page+1;
+  $('pageCount').textContent=String(state.page+1).padStart(2,'0')+' / '+String(max).padStart(2,'0')+(isSpread()&&next?' · '+String(visibleEnd).padStart(2,'0'):'');
+  const before=lengths.slice(0,state.chapter).reduce((a,b)=>a+b,0);
+  const ratio=Math.min(1,(before+state.anchor)/totalLength);
+  $('storyProgress').value=Math.round(ratio*1000);
+  $('storyProgress').style.setProperty('--progress',(ratio*100).toFixed(2)+'%');
+  $('progressPercent').textContent=Math.round(ratio*100)+'%';
+  refreshScene();persist();
+}
+function swapChapter(index,goLast=false){
+  state.chapter=index;state.anchor=goLast?lengths[index]:0;
+  if(!ensureMeasurements())return;
+  state.pages=paginateChapter(STORY.chapters[index]);
+  state.page=goLast?(isSpread()?Math.floor((state.pages.length-1)/2)*2:state.pages.length-1):0;
+}
+function nextPage(direction){
+  if(!state.started||state.isTurning||state.drawer)return;
+  const step=isSpread()?2:1;
+  const newPage=state.page+(direction>0?step:-step);
+  if(newPage<0&&state.chapter<=0){toast('첫 번째 페이지입니다.');return}
+  if(newPage>=state.pages.length&&state.chapter>=STORY.chapters.length-1){toast('이야기의 마지막 페이지입니다.');return}
+  const effect=pref.motion&&!reducedMotion.matches;
+  const copies=[];
+  if(effect){for(const sheet of isSpread()?[$('sheetLeft'),$('sheetRight')]:[$('sheetLeft')]){
+    const x=sheet.getBoundingClientRect(),parent=refs.book.getBoundingClientRect();
+    const c=document.createElement('div');c.className='turn-copy '+(direction>0?'forward':'back');
+    c.style.left=(x.left-parent.left)+'px';c.style.width=x.width+'px';c.style.height=x.height+'px';
+    c.style.borderRadius='3px';c.innerHTML=sheet.innerHTML;
+    c.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));copies.push(c)
+  }}
+  if(newPage<0)swapChapter(state.chapter-1,true);
+  else if(newPage>=state.pages.length)swapChapter(state.chapter+1,false);
+  else state.page=newPage;
+  renderPage();
+  if(effect){
+    state.isTurning=true;refs.book.append();
+    const layer=$('turnLayer');layer.replaceChildren(...copies);
+    // A single fixed lock prevents high-frequency taps from skipping pages.
+    setTimeout(()=>{layer.replaceChildren();state.isTurning=false},440);
+  }
+}
+function goTo(chapter,anchor=0){
+  if(state.isTurning)return;
+  state.chapter=Math.max(0,Math.min(STORY.chapters.length-1,chapter));state.anchor=Math.max(0,Math.min(lengths[state.chapter],anchor));
+  rebuildPages();
+}
+/* ============================================================================
+  5. 뷰 / 제스처 / 키보드 / 설정
+============================================================================ */
+function openReader(music){
+  state.started=true;audioEnabled=music;state.musicDesired=music;
+  refs.cover.classList.add('hidden');refs.reader.classList.remove('hidden');
+  refs.app.classList.remove('chrome-hidden');
+  // Music starts on the same user gesture. Reflows do not pause the audio element.
+  rebuildPages();
+  if(music){
+    if(!audioNodes[audioSlot].src){currentTrackSrc='';refreshScene()}
+  }else setAudioEnabled(false);
+}
+function returnToCover(){closeDrawer();setAudioEnabled(false);refs.reader.classList.add('hidden');refs.cover.classList.remove('hidden');state.started=false;updateResumeHint()}
+function updateResumeHint(){
+  if(saved||state.anchor>0||state.chapter>0){const ch=STORY.chapters[state.chapter];$('resumeHint').textContent='마지막 기록 · '+String(ch.number).padStart(2,'0')+'장 '+ch.title+'부터 이어집니다.'}
+  else $('resumeHint').textContent='이어폰을 착용하면 더욱 풍부한 경험을 할 수 있습니다.';
+}
+function openDrawer(which){
+  state.drawer=which;
+  $('drawerTitle').textContent=which==='chapters'?'Table of contents':'Reading settings';
+  $('drawerEyebrow').textContent=which==='chapters'?'THE STORY SO FAR':'THE READER\'S ROOM';
+  $('settingsContent').classList.toggle('hidden',which!=='settings');
+  $('chaptersContent').classList.toggle('hidden',which!=='chapters');
+  if(which==='chapters')renderChapterList();
+  $('drawerScrim').classList.add('open');$('drawer').classList.add('open');$('drawer').setAttribute('aria-hidden','false');
+  $('drawerClose').focus();
+}
+function closeDrawer(){
+  state.drawer=null;$('drawerScrim').classList.remove('open');$('drawer').classList.remove('open');$('drawer').setAttribute('aria-hidden','true');
+  if(state.started)refs.stage.focus({preventScroll:true});
+}
+function renderChapterList(){
+  $('chapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button type="button" class="chapter-card '+(state.chapter===i?'active':'')+'" data-chapter="'+i+'"><span class="num">'+String(ch.number).padStart(2,'0')+'</span><span><strong>'+escapeHTML(ch.title)+'</strong><small>'+escapeHTML(ch.description||'')+'</small></span></button>').join('');
+}
+function applyAndRebuild(){
+  const anchor=state.anchor;updatePreferences();
+  // Rebuild after browser style/layout flush. Keep text position, not old page number.
+  requestAnimationFrame(()=>{state.anchor=anchor;rebuildPages();persist()});
+}
+$('startWithMusic').addEventListener('click',()=>openReader(true));
+$('startSilent').addEventListener('click',()=>openReader(false));
+$('tocButton').addEventListener('click',()=>openDrawer('chapters'));
+$('settingsButton').addEventListener('click',()=>openDrawer('settings'));
+$('drawerClose').addEventListener('click',closeDrawer);
+$('drawerScrim').addEventListener('click',closeDrawer);
+$('chapterList').addEventListener('click',e=>{const b=e.target.closest('[data-chapter]');if(!b)return;closeDrawer();goTo(Number(b.dataset.chapter),0)});
+$('returnCover').addEventListener('click',returnToCover);
+$('playButton').addEventListener('click',()=>{if(!currentTrackSrc){audioEnabled=true;refreshScene()}else setAudioEnabled(!audioEnabled)});
+$('muteButton').addEventListener('click',()=>{pref.muted=!pref.muted;updateVolume();persist()});
+$('volumeSlider').addEventListener('input',e=>{pref.volume=Number(e.target.value)/100;if(pref.volume>0)pref.muted=false;updateVolume();persist()});
+$('storyProgress').addEventListener('change',e=>{
+  if(!state.started)return;
+  let remaining=Number(e.target.value)/1000*totalLength;
+  for(let i=0;i<lengths.length;i++){if(remaining<=lengths[i]||i===lengths.length-1){goTo(i,remaining);break}remaining-=lengths[i]}
+});
+$('fullscreenButton').addEventListener('click',()=>{
+  try{if(document.fullscreenElement)document.exitFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>toast('이 브라우저는 전체 화면을 지원하지 않습니다.'));else toast('이 브라우저에서는 전체 화면을 사용할 수 없습니다.')}catch(e){toast('전체 화면을 사용할 수 없습니다.')}
+});
+$('themeGrid').addEventListener('click',e=>{const button=e.target.closest('[data-value]');if(!button)return;pref.theme=button.dataset.value;updatePreferences();persist()});
+$('fontFamily').addEventListener('change',e=>{pref.fontFamily=e.target.value;applyAndRebuild()});
+for(const [id,key,parse] of [['fontSize','fontSize',Number],['lineHeight','lineHeight',Number],['pageMargin','pageMargin',Number]]){
+  $(id).addEventListener('input',e=>{pref[key]=parse(e.target.value);clearTimeout(resizeTimer);resizeTimer=setTimeout(applyAndRebuild,130);updatePreferences()});
+  $(id).addEventListener('change',applyAndRebuild);
+}
+for(const [id,key] of [['motionToggle','motion'],['sceneToggle','scenes'],['spreadToggle','spread']]){
+  $(id).addEventListener('click',()=>{pref[key]=!pref[key];if(key==='scenes'){backgroundShown='';}applyAndRebuild()});
+}
+let pointerStart=null;
+refs.stage.addEventListener('pointerdown',e=>{
+  if(!state.started||state.drawer||e.button!==0||!e.isPrimary)return;
+  pointerStart={x:e.clientX,y:e.clientY,time:performance.now(),id:e.pointerId};
+});
+refs.stage.addEventListener('pointerup',e=>{
+  if(!pointerStart||pointerStart.id!==e.pointerId)return;
+  const p=pointerStart;pointerStart=null;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.2){nextPage(dx<0?1:-1);return}
+  if(Math.abs(dx)>12||Math.abs(dy)>12)return;
+  const bounds=refs.stage.getBoundingClientRect();const fraction=(e.clientX-bounds.left)/bounds.width;
+  if(fraction<.29)nextPage(-1);
+  else if(fraction>.71)nextPage(1);
+  else refs.app.classList.toggle('chrome-hidden');
+});
+refs.stage.addEventListener('pointercancel',()=>pointerStart=null);
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(state.drawer){closeDrawer();e.preventDefault()}return}
+  if(!state.started||state.drawer||!$('studioOverlay').classList.contains('hidden'))return;
+  const tag=e.target?.tagName||'';
+  if(['INPUT','SELECT','TEXTAREA'].includes(tag)||e.ctrlKey||e.altKey||e.metaKey)return;
+  if(tag==='BUTTON'&&(e.key===' '||e.key==='Spacebar'))return;
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'||e.key===' '||e.key==='Spacebar'){
+    e.preventDefault();if(e.repeat)return;nextPage(e.key==='ArrowLeft'?-1:1)
+  }
+});
+let lastWidth=0,lastHeight=0;
+const observer=new ResizeObserver(()=>{
+  if(!state.started)return;
+  const r=$('sheetLeft').getBoundingClientRect();
+  const w=Math.round(r.width),h=Math.round(r.height);
+  if(Math.abs(w-lastWidth)<2&&Math.abs(h-lastHeight)<2)return;
+  lastWidth=w;lastHeight=h;
+  clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!state.isTurning)rebuildPages()},140);
+});
+observer.observe($('sheetLeft'));
+window.addEventListener('resize',()=>{if(!state.started)return;clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{applyAndRebuild()},160)});
+window.addEventListener('pagehide',persist);
+if(document.fonts?.ready)document.fonts.ready.then(()=>{if(state.started)rebuildPages()});
+updatePreferences();updateResumeHint();setBackdrop('images/cover.jpg');
+/* ============================================================================
+  6. CONTENT STUDIO: local editor, persistent binary assets, portable publishing.
+  Stored story + blobs remain on this browser only; content.json is the public build.
+============================================================================ */
+const STUDIO_DB='story-sound-studio-v2';
+const STUDIO_VERSION=2;
+const bundledStory=JSON.parse(JSON.stringify(STORY));
+let publishedStory=JSON.parse(JSON.stringify(STORY));
+let studioDB=null,studioActive=0,studioScenes=[],studioChapterBgm=null,studioChapterBg='',studioAvailable=true;
+let studioDirty=false,studioWorking=false,studioStatusTimer=null;
+const studioBlobs=new Map(),studioObjectURLs=new Map();
+const studioJSONFile=$('studioImportFile');
+const studioMediaFile=$('studioMediaFile');
+const studioTXTFile=$('studioTXTFile');
+let uploadTarget=null;
+function cloneStory(o){return JSON.parse(JSON.stringify(o))}
+function isAssetPath(src){return typeof src==='string'&&src.startsWith('asset:')}
+function resolveAssetPath(src){
+  if(!src)return '';
+  if(!isAssetPath(src))return src;
+  const id=src.slice(6);
+  if(studioObjectURLs.has(id))return studioObjectURLs.get(id);
+  const blob=studioBlobs.get(id)?.blob;
+  if(!blob){console.warn('[Story & Sound] 업로드 미디어 누락:',id);return ''}
+  const url=URL.createObjectURL(blob);studioObjectURLs.set(id,url);return url;
+}
+function studioRevokeURL(id){const old=studioObjectURLs.get(id);if(old){URL.revokeObjectURL(old);studioObjectURLs.delete(id)}}
+function studioRevokeAll(){for(const id of studioObjectURLs.keys())studioRevokeURL(id)}
+function studioStoreOpen(){return new Promise((resolve,reject)=>{
+  if(!window.indexedDB){reject(Error('IndexedDB를 지원하지 않는 브라우저입니다.'));return}
+  const req=indexedDB.open(STUDIO_DB,1);
+  req.onupgradeneeded=()=>{const db=req.result; if(!db.objectStoreNames.contains('state'))db.createObjectStore('state');if(!db.objectStoreNames.contains('media'))db.createObjectStore('media',{keyPath:'id'})};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+})}
+function studioIDB(store,mode,fn){return new Promise((resolve,reject)=>{
+  if(!studioDB){reject(Error('저장소를 사용할 수 없습니다.'));return}
+  const tx=studioDB.transaction(store,mode),os=tx.objectStore(store);
+  let result;try{result=fn(os)}catch(e){reject(e);return}
+  tx.oncomplete=()=>resolve(result?.result);tx.onerror=()=>reject(tx.error||Error('데이터 저장 실패'));tx.onabort=()=>reject(tx.error||Error('데이터 작업 취소'));
+})}
+function studioStatus(message,error=false){
+  $('studioStatus').textContent=message;$('studioStatus').style.color=error?'#edaaa6':'#b5cdb7';
+  if(error)console.warn('[Story & Sound Studio]',message);
+}
+function studioValidStory(story){
+  return story&&typeof story==='object'&&Array.isArray(story.chapters)&&story.chapters.length>0&&story.chapters.length<=500&&story.chapters.every(ch=>typeof ch.title==='string'&&Array.isArray(ch.blocks)&&ch.blocks.length<=100000&&ch.blocks.every(b=>b&&['p','divider','scene'].includes(b.type)&& (b.type!=='p'||typeof b.text==='string')));
+}
+function studioRefreshLengths(){
+  lengths=STORY.chapters.map(ch=>ch.blocks.reduce((n,b)=>n+(b.type==='p'?b.text.length+1:0),0));
+  totalLength=lengths.reduce((a,b)=>a+b,0)||1;
+  state.chapter=Math.max(0,Math.min(STORY.chapters.length-1,state.chapter));
+  state.anchor=Math.max(0,Math.min(lengths[state.chapter],state.anchor));
+  if(state.started){state.isTurning=false;$('turnLayer').replaceChildren();rebuildPages();}
+  updateResumeHint();
+}
+function studioCoverUpdate(){
+  const src=resolveAssetPath(STORY.cover||'images/cover.jpg')||'images/cover.jpg';
+  refs.cover.style.backgroundImage='linear-gradient(115deg,#151724e8,#241e2a94 48%,#17131af0),url('+JSON.stringify(src)+')';
+  $('studioCoverName').textContent=STORY.cover?'현재 표지: '+studioNameOf(STORY.cover):'현재 표지: 기본 cover.jpg';
+}
+function studioMediaFromDataURL(data){
+  const i=data.indexOf(',');if(i<0||!data.startsWith('data:'))throw Error('미디어 데이터 형식이 올바르지 않습니다.');
+  const header=data.slice(5,i),mime=header.split(';')[0]||'application/octet-stream';
+  const payload=data.slice(i+1);const raw=header.includes(';base64')?atob(payload):decodeURIComponent(payload);
+  const bytes=new Uint8Array(raw.length);for(let j=0;j<raw.length;j++)bytes[j]=raw.charCodeAt(j);
+  return new Blob([bytes],{type:mime});
+}
+function studioReadAsDataURL(blob){return new Promise((res,rej)=>{const reader=new FileReader();reader.onload=()=>res(reader.result);reader.onerror=()=>rej(reader.error);reader.readAsDataURL(blob)})}
+function studioUsePackage(pkg){
+  if(!studioValidStory(pkg?.story))throw Error('story.chapters가 올바른 콘텐츠 JSON이 아닙니다.');
+  STORY=cloneStory(pkg.story);
+  for(const [id,item] of Object.entries(pkg.media||{})){
+    if(!/^[\w-]{1,110}$/.test(id)||!item||typeof item.data!=='string')continue;
+    studioBlobs.set(id,{id,name:String(item.name||id),blob:studioMediaFromDataURL(item.data)});
+  }
+}
+async function studioInit(){
+  $('startWithMusic').disabled=true;$('startSilent').disabled=true;
+  try{
+    if(location.protocol==='http:'||location.protocol==='https:'){
+      try{
+        const response=await fetch('./content.json',{cache:'no-store'});
+        if(response.ok){
+          const pkg=await response.json();studioUsePackage(pkg);
+          publishedStory=cloneStory(STORY);
+          window.STORY_CONTENT_PUBLISHED=true;
+        }
+      }catch(e){console.warn('[Story & Sound] 게시용 content.json 파일 미사용:',e.message)}
+    }
+    try{
+      studioDB=await studioStoreOpen();
+      const localMedia=await studioIDB('media','readonly',store=>store.getAll());
+      for(const item of (localMedia||[]))if(item?.blob)studioBlobs.set(item.id,item);
+      const draft=await studioIDB('state','readonly',store=>store.get('draft'));
+      if(studioValidStory(draft))STORY=cloneStory(draft);
+    }catch(e){studioAvailable=false;console.warn('[Story & Sound] 로컬 편집 저장 기능 제한:',e);studioStatus('이 환경에서는 편집 저장이 불가능합니다. 파일을 다른 브라우저 또는 로컬 서버에서 열어주세요.',true)}
+    studioRefreshLengths();studioCoverUpdate();
+  }finally{
+    $('startWithMusic').disabled=false;$('startSilent').disabled=false;
+    if(!studioAvailable)toast('이 브라우저에서는 관리자 편집 저장이 제한될 수 있습니다.');
+  }
+}
+function studioPlainText(ch){return ch.blocks.filter(b=>b.type==='p'||b.type==='divider').map(b=>b.type==='divider'?'---':b.text).join('\n\n')}
+function studioToBlocks(raw){
+  const text=String(raw).replace(/\r\n?/g,'\n').replace(/^\uFEFF/,'');
+  if(!text.trim())return [{type:'p',text:''}];
+  return text.split(/\n[ \t]*\n+/g).map(t=>{let p=t.trim();return p==='---'||p==='***'?{type:'divider'}:{type:'p',text:p}});
+}
+function studioExtractScenes(ch){
+  let position=0;const scenes=[];
+  for(const b of ch.blocks){if(b.type==='scene')scenes.push({position,background:b.background||'',music:b.music?{...b.music}:null});else position++}
+  return scenes;
+}
+function studioNameOf(src){
+  if(!src)return '미설정';if(isAssetPath(src))return studioBlobs.get(src.slice(6))?.name||'미디어 없음';
+  return String(src).split('/').pop().slice(0,100);
+}
+function studioEscape(str){return escapeHTML(str||'')}
+function studioSyncForm(){
+  const ch=STORY.chapters[studioActive];if(!ch||!$('studioTitle'))return;
+  ch.title=$('studioTitle').value.trim()||'제목 없음';
+  ch.description=$('studioDescription').value.trim();
+  const pureBlocks=studioToBlocks($('studioManuscript').value);
+  const groups=new Map();
+  for(const s of studioScenes){const pos=Math.max(0,Math.min(pureBlocks.length-1,Number(s.position)||0));if(!groups.has(pos))groups.set(pos,[]);groups.get(pos).push(s)}
+  const newBlocks=[];
+  pureBlocks.forEach((b,i)=>{for(const s of groups.get(i)||[]){const scene={type:'scene'};if(s.background)scene.background=s.background;if(s.music?.src)scene.music={...s.music};newBlocks.push(scene)}newBlocks.push(b)});
+  ch.blocks=newBlocks;
+  ch.bgm=studioChapterBgm?.src?{...studioChapterBgm}:null;
+  ch.background=studioChapterBg||'';
+  STORY.chapters.forEach((one,i)=>one.number=i+1);
+  studioDirty=true;
+}
+function studioListRender(){
+  $('studioChapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button class="studio-chapter '+(i===studioActive?'active':'')+'" type="button" data-edit-chapter="'+i+'"><span class="num">'+String(i+1).padStart(2,'0')+'</span><span><strong>'+studioEscape(ch.title)+'</strong><small>'+studioEscape(ch.description||'')+'</small></span></button>').join('');
+}
+function studioLoadEditor(){
+  const ch=STORY.chapters[studioActive];if(!ch)return;
+  studioScenes=studioExtractScenes(ch);studioChapterBgm=ch.bgm?{...ch.bgm}:null;studioChapterBg=ch.background||'';
+  $('studioChapterLabel').textContent='CHAPTER '+String(studioActive+1).padStart(2,'0');
+  $('studioTitle').value=ch.title;$('studioDescription').value=ch.description||'';
+  $('studioManuscript').value=studioPlainText(ch);
+  $('studioBgmName').value=studioChapterBgm?.title||'';
+  studioUpdateMediaNames();studioScenesRender();studioListRender();
+}
+function studioUpdateMediaNames(){
+  $('studioBgmCurrent').textContent=studioChapterBgm?.src?'♪ '+studioNameOf(studioChapterBgm.src):'음악 미설정 (기본 BGM 없음)';
+  $('studioBgCurrent').textContent=studioChapterBg?'▣ '+studioNameOf(studioChapterBg):'배경 미설정 (기본 배경 적용)';
+}
+function studioSceneOptions(){
+  return studioToBlocks($('studioManuscript').value).map((b,i)=>'<option value="'+i+'">'+(i+1)+'. '+studioEscape(b.type==='divider'?'· · · 장면 구분':b.text.slice(0,51)||'(빈 문단)')+'</option>').join('');
+}
+function studioScenesRender(){
+  const opts=studioSceneOptions();
+  $('studioSceneList').innerHTML=studioScenes.length?studioScenes.map((scene,i)=>'<div class="studio-scene"><div class="studio-scene-header"><strong>SCENE '+String(i+1).padStart(2,'0')+' · 장면 전환</strong><button class="studio-btn danger" data-delete-scene="'+i+'" type="button">장면 삭제</button></div>'+ 
+    '<label class="studio-field"><span>전환 시작 문단</span><select class="studio-select" data-scene-pos="'+i+'">'+opts+'</select></label>'+
+    '<div class="studio-scene-grid"><div><label class="studio-field"><span>음악 제목</span><input class="studio-input" data-scene-tracktitle="'+i+'" value="'+studioEscape(scene.music?.title||'')+'" placeholder="예: Rain on Glass"></label><div class="studio-media-note">'+studioEscape(studioNameOf(scene.music?.src))+'</div><div class="studio-actions"><button type="button" class="studio-btn" data-scene-music="'+i+'">MP3 선택</button><button type="button" class="studio-btn" data-scene-music-clear="'+i+'">음악 해제</button></div></div>'+
+    '<div><span class="studio-label">장면 배경</span><div class="studio-media-note">'+studioEscape(studioNameOf(scene.background))+'</div><div class="studio-actions"><button type="button" class="studio-btn" data-scene-image="'+i+'">이미지 선택</button><button type="button" class="studio-btn" data-scene-image-clear="'+i+'">배경 해제</button></div></div></div></div>').join(''):'<p class="studio-muted">아직 장면 전환이 없습니다. 추가하면 지정된 문단부터 배경과 음악을 변경할 수 있습니다.</p>';
+  document.querySelectorAll('[data-scene-pos]').forEach(el=>{const scene=studioScenes[Number(el.dataset.scenePos)];el.value=String(Math.max(0,Math.min(el.options.length-1,scene.position))) });
+}
+async function studioPersist(){
+  if(!studioAvailable)throw Error('이 브라우저에서는 IndexedDB 저장소를 사용할 수 없습니다.');
+  await studioIDB('state','readwrite',store=>store.put(cloneStory(STORY),'draft'));
+  studioDirty=false;
+}
+async function studioSave(quiet=false){
+  if(studioWorking)return false;
+  studioSyncForm();
+  try{
+    await studioPersist();studioRefreshLengths();studioListRender();
+    if(!quiet)studioStatus('저장 완료 · 이 브라우저에 보관되었습니다. 다른 독자에게 게시하려면 content.json을 내보내세요.');
+    return true;
+  }catch(e){studioStatus('저장 실패: '+e.message,true);return false}
+}
+function studioShow(tab){
+  $('studioEditorPanel').classList.toggle('hidden',tab!=='edit');
+  $('studioPublishPanel').classList.toggle('hidden',tab!=='publish');
+  $('studioEditTab').classList.toggle('primary',tab==='edit');
+  $('studioPublishTab').classList.toggle('primary',tab==='publish');
+  $('studioMain').scrollTop=0;
+}
+function studioOpen(){
+  if(state.drawer)closeDrawer();
+  refs.app.classList.remove('chrome-hidden');
+  $('studioOverlay').classList.remove('hidden');studioActive=Math.max(0,Math.min(studioActive,STORY.chapters.length-1));
+  studioLoadEditor();studioShow('edit');
+  studioStatus(studioAvailable?'편집 내용은 이 브라우저에만 저장됩니다. 다른 독자에게 공개하려면 게시용 콘텐츠를 내보내세요.':'IndexedDB 저장을 사용할 수 없습니다. 다른 브라우저 또는 로컬 서버에서 실행하세요.',!studioAvailable);
+  $('studioClose').focus();
+}
+async function studioClose(){
+  if(studioDirty)await studioSave(true);
+  $('studioOverlay').classList.add('hidden');
+  if(state.started)refs.stage.focus({preventScroll:true});
+}
+async function studioSelectChapter(index){
+  if(studioWorking||index===studioActive)return;
+  await studioSave(true);studioActive=index;studioLoadEditor();studioShow('edit');
+}
+async function studioCreateChapter(){
+  await studioSave(true);
+  STORY.chapters.push({number:STORY.chapters.length+1,title:'새로운 챕터',description:'',bgm:null,background:'',blocks:[{type:'p',text:'새로운 이야기를 여기에 입력하세요.'}]});
+  studioActive=STORY.chapters.length-1;await studioPersist().catch(e=>studioStatus('저장 실패: '+e.message,true));studioLoadEditor();studioRefreshLengths();studioShow('edit');
+}
+async function studioDeleteChapter(){
+  if(STORY.chapters.length===1){studioStatus('챕터는 최소 하나 필요합니다.',true);return}
+  if(!confirm('현재 챕터와 해당 원고·장면 설정을 삭제하시겠습니까?'))return;
+  STORY.chapters.splice(studioActive,1);studioActive=Math.max(0,Math.min(studioActive,STORY.chapters.length-1));
+  STORY.chapters.forEach((ch,i)=>ch.number=i+1);
+  state.chapter=Math.min(state.chapter,STORY.chapters.length-1);state.anchor=0;
+  await studioPersist().catch(e=>studioStatus('삭제 저장 실패: '+e.message,true));studioLoadEditor();studioRefreshLengths();
+}
+async function studioMoveChapter(dir){
+  await studioSave(true);const j=studioActive+dir;
+  if(j<0||j>=STORY.chapters.length)return;
+  [STORY.chapters[studioActive],STORY.chapters[j]]=[STORY.chapters[j],STORY.chapters[studioActive]];
+  if(state.chapter===studioActive)state.chapter=j;else if(state.chapter===j)state.chapter=studioActive;
+  studioActive=j;STORY.chapters.forEach((ch,i)=>ch.number=i+1);
+  await studioPersist().catch(e=>studioStatus('이동 저장 실패: '+e.message,true));studioLoadEditor();studioRefreshLengths();
+}
+async function studioSaveMedia(file){
+  if(!file)return null;
+  if(file.size>45*1024*1024)throw Error('개별 파일은 45MB 이하만 업로드할 수 있습니다.');
+  const audio=uploadTarget?.kind==='bgm'||uploadTarget?.kind==='scene-music';
+  const okay=audio?/\.mp3$/i.test(file.name):/\.(jpe?g|png|webp|gif)$/i.test(file.name);
+  if(!okay)throw Error(audio?'MP3 형식의 음악을 선택하세요.':'JPG, PNG, WEBP, GIF 이미지를 선택하세요.');
+  const id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+  const item={id,name:file.name,blob:file};
+  if(!studioAvailable)throw Error('미디어 저장소를 사용할 수 없습니다. 서버에서 열거나 브라우저 설정을 확인하세요.');
+  await studioIDB('media','readwrite',os=>os.put(item));studioBlobs.set(id,item);
+  return 'asset:'+id;
+}
+function studioTriggerUpload(kind,index){uploadTarget={kind,index};studioMediaFile.value='';studioMediaFile.accept=kind==='bgm'||kind==='scene-music'?'.mp3,audio/mpeg':'.png,.jpg,.jpeg,.webp,.gif,image/*';studioMediaFile.click()}
+async function studioHandleMedia(file){
+  if(!file||!uploadTarget)return;
+  const target=uploadTarget;studioWorking=true;studioStatus('파일 저장 중: '+file.name);
+  try{
+    const ref=await studioSaveMedia(file);
+    if(target.kind==='bgm'){
+      studioChapterBgm={src:ref,title:file.name.replace(/\.mp3$/i,'')};$('studioBgmName').value=studioChapterBgm.title;
+    }else if(target.kind==='background')studioChapterBg=ref;
+    else if(target.kind==='cover')STORY.cover=ref;
+    else if(target.kind==='scene-music'){
+      const scene=studioScenes[target.index];if(scene)scene.music={src:ref,title:file.name.replace(/\.mp3$/i,'')};
+    }else if(target.kind==='scene-image'){
+      const scene=studioScenes[target.index];if(scene)scene.background=ref;
+    }
+    studioSyncForm();await studioPersist();studioRefreshLengths();studioCoverUpdate();studioUpdateMediaNames();studioScenesRender();studioListRender();
+    studioStatus('업로드 및 저장 완료: '+file.name);
+  }catch(e){studioStatus('업로드 실패: '+e.message,true)}finally{studioWorking=false;uploadTarget=null}
+}
+async function studioExport(){
+  await studioSave(true);
+  studioWorking=true;$('studioExportButton').disabled=true;studioStatus('콘텐츠 및 MP3/이미지를 내보내는 중입니다.');
+  try{
+    const ids=new Set();
+    const register=src=>{if(isAssetPath(src))ids.add(src.slice(6))};
+    register(STORY.cover);
+    for(const ch of STORY.chapters){register(ch.background);register(ch.bgm?.src);for(const b of ch.blocks){register(b.background);register(b.music?.src)}}
+    const media={};
+    for(const id of ids){const entry=studioBlobs.get(id);if(!entry?.blob)throw Error('파일 누락: '+id);media[id]={name:entry.name,type:entry.blob.type,data:await studioReadAsDataURL(entry.blob)}}
+    const pkg={app:'Story & Sound',format:2,exportedAt:new Date().toISOString(),story:cloneStory(STORY),media};
+    const blob=new Blob([JSON.stringify(pkg)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='content.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+    studioStatus('content.json 생성 완료 · 웹사이트의 index.html과 같은 위치에 업로드하면 독자에게 게시됩니다.');
+  }catch(e){studioStatus('콘텐츠 내보내기 실패: '+e.message,true)}finally{studioWorking=false;$('studioExportButton').disabled=false}
+}
+async function studioImportFile(file){
+  if(!file)return;
+  if(!confirm('현재 로컬 원고와 장면 설정을 가져온 콘텐츠로 교체하시겠습니까? 먼저 content.json을 백업해 두는 것을 권장합니다.'))return;
+  studioWorking=true;studioStatus('콘텐츠 가져오는 중...');
+  try{
+    const pkg=JSON.parse(await file.text());
+    if(!studioValidStory(pkg.story))throw Error('올바른 Story & Sound 콘텐츠 파일이 아닙니다.');
+    const incoming=[];
+    for(const [id,item] of Object.entries(pkg.media||{})){
+      if(!/^[\w-]{1,110}$/.test(id)||!item?.data)throw Error('잘못된 음악/이미지 항목');
+      incoming.push({id,name:String(item.name||id),blob:studioMediaFromDataURL(item.data)});
+    }
+    if(!studioAvailable)throw Error('로컬 저장소가 없어 콘텐츠를 가져올 수 없습니다.');
+    // Validate all content before replacing data. Transactions are independent but no state
+    // changes occur until all media has been decoded successfully.
+    await studioIDB('media','readwrite',os=>{os.clear();for(const item of incoming)os.put(item)});
+    studioRevokeAll();studioBlobs.clear();for(const item of incoming)studioBlobs.set(item.id,item);
+    STORY=cloneStory(pkg.story);state.chapter=0;state.anchor=0;studioActive=0;
+    await studioPersist();studioLoadEditor();studioRefreshLengths();studioCoverUpdate();studioStatus('콘텐츠 가져오기 완료: '+STORY.chapters.length+'개 챕터');studioShow('edit');
+  }catch(e){studioStatus('콘텐츠 가져오기 실패: '+e.message,true)}finally{studioWorking=false}
+}
+async function studioRestorePublished(){
+  if(!confirm('현재 브라우저의 편집 기록을 삭제하고 공개된 버전(없으면 기본 샘플)으로 되돌리시겠습니까?'))return;
+  try{await studioIDB('state','readwrite',os=>os.delete('draft'));await studioIDB('media','readwrite',os=>os.clear());location.reload()}
+  catch(e){studioStatus('초기화 실패: '+e.message,true)}
+}
+$('studioCoverButton').addEventListener('click',studioOpen);
+$('studioSettingsButton').addEventListener('click',studioOpen);
+$('studioClose').addEventListener('click',studioClose);
+$('studioAddChapter').addEventListener('click',studioCreateChapter);
+$('studioChapterList').addEventListener('click',e=>{const b=e.target.closest('[data-edit-chapter]');if(b)studioSelectChapter(Number(b.dataset.editChapter))});
+$('studioSave').addEventListener('click',()=>studioSave());
+$('studioDelete').addEventListener('click',studioDeleteChapter);
+$('studioMoveUp').addEventListener('click',()=>studioMoveChapter(-1));
+$('studioMoveDown').addEventListener('click',()=>studioMoveChapter(1));
+$('studioEditTab').addEventListener('click',()=>studioShow('edit'));
+$('studioPublishTab').addEventListener('click',async()=>{await studioSave(true);studioShow('publish')});
+$('studioExportButton').addEventListener('click',studioExport);
+$('studioImportButton').addEventListener('click',()=>{studioJSONFile.value='';studioJSONFile.click()});
+$('studioRestoreButton').addEventListener('click',studioRestorePublished);
+studioJSONFile.addEventListener('change',e=>studioImportFile(e.target.files[0]));
+$('studioLoadTXT').addEventListener('click',()=>{studioTXTFile.value='';studioTXTFile.click()});
+studioTXTFile.addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;
+  try{const txt=await file.text();if(!$('studioManuscript').value.trim()||confirm('현재 원고를 TXT 파일 내용으로 교체하시겠습니까?')){$('studioManuscript').value=txt.replace(/^\uFEFF/,'');studioDirty=true;studioScenesRender();studioStatus('TXT 불러오기 완료 · 장면 전환 문단 위치를 확인하고 저장하세요.')}}catch(err){studioStatus('TXT 불러오기 실패: '+err.message,true)}
+});
+$('studioMediaFile').addEventListener('change',e=>studioHandleMedia(e.target.files[0]));
+$('studioUploadBgm').addEventListener('click',()=>studioTriggerUpload('bgm'));
+$('studioUploadBg').addEventListener('click',()=>studioTriggerUpload('background'));
+$('studioUploadCover').addEventListener('click',()=>studioTriggerUpload('cover'));
+$('studioRemoveBgm').addEventListener('click',()=>{studioChapterBgm=null;studioUpdateMediaNames();studioDirty=true});
+$('studioRemoveBg').addEventListener('click',()=>{studioChapterBg='';studioUpdateMediaNames();studioDirty=true});
+$('studioRemoveCover').addEventListener('click',async()=>{STORY.cover='';studioSyncForm();await studioSave();studioCoverUpdate()});
+$('studioBgmName').addEventListener('input',e=>{if(studioChapterBgm)studioChapterBgm.title=e.target.value;studioDirty=true});
+for(const id of ['studioTitle','studioDescription','studioManuscript'])$(id).addEventListener('input',()=>studioDirty=true);
+$('studioManuscript').addEventListener('change',()=>studioScenesRender());
+$('studioAddScene').addEventListener('click',()=>{studioScenes.push({position:0,music:null,background:''});studioDirty=true;studioScenesRender();$('studioSceneList').lastElementChild?.scrollIntoView({block:'nearest',behavior:'smooth'})});
+$('studioSceneList').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const d=b.dataset;
+  if(d.deleteScene!==undefined){studioScenes.splice(Number(d.deleteScene),1);studioDirty=true;studioScenesRender()}
+  else if(d.sceneMusic!==undefined)studioTriggerUpload('scene-music',Number(d.sceneMusic));
+  else if(d.sceneImage!==undefined)studioTriggerUpload('scene-image',Number(d.sceneImage));
+  else if(d.sceneMusicClear!==undefined){studioScenes[Number(d.sceneMusicClear)].music=null;studioDirty=true;studioScenesRender()}
+  else if(d.sceneImageClear!==undefined){studioScenes[Number(d.sceneImageClear)].background='';studioDirty=true;studioScenesRender()}
+});
+$('studioSceneList').addEventListener('change',e=>{
+  if(e.target.dataset.scenePos!==undefined){studioScenes[Number(e.target.dataset.scenePos)].position=Number(e.target.value);studioDirty=true}
+  if(e.target.dataset.sceneTracktitle!==undefined){const s=studioScenes[Number(e.target.dataset.sceneTracktitle)];if(s.music)s.music.title=e.target.value;studioDirty=true}
+});
+$('studioSceneList').addEventListener('input',e=>{if(e.target.dataset.sceneTracktitle!==undefined){const s=studioScenes[Number(e.target.dataset.sceneTracktitle)];if(s.music)s.music.title=e.target.value;studioDirty=true}});
+// Admin overlay must not consume page-navigation shortcuts.  Escape closes the overlay.
+window.addEventListener('keydown',e=>{if(!$('studioOverlay').classList.contains('hidden')&&e.key==='Escape'){e.preventDefault();studioClose()}},true);
+studioInit().catch(e=>{console.error('[Story & Sound] 초기화 예외:',e);$('startWithMusic').disabled=false;$('startSilent').disabled=false});
+
+</script>
+</body>
+</html>
