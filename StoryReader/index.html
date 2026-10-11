@@ -569,7 +569,7 @@ function htmlPiece(piece,ch){
   if(piece.type==='head'){
     const titleMatch=String(ch.title||'').match(/Chapter\\s+(\\d+)\\s*[—-]/i);
     const chapterIndex=titleMatch?Number(titleMatch[1]):0;
-    const illustration=(chapterIndex>=1&&chapterIndex<=8)?'images/chapter'+String(chapterIndex).padStart(2,'0')+'.webp':'';
+    const illustration=(chapterIndex>=1&&chapterIndex<=8)?'images/chapter'+String(chapterIndex).padStart(2,'0')+'.png':'';
     return '<div class="chapter-head"><span class="chapter-number">CHAPTER '+String(ch.number).padStart(2,'0')+'</span><h2>'+escapeHTML(ch.title)+'</h2><span class="chapter-underline"></span>'+(illustration?'<div class="chapter-illustration-wrap"><img class="chapter-illustration" src="'+illustration+'" alt="'+escapeHTML(ch.title)+' 대표 삽화" loading="eager" onerror="this.parentElement.style.display=\'none\'"></div>':'')+'</div>';
   }
   if(piece.type==='divider')return '<div class="scene-divider" aria-label="장면 구분">· · ·</div>';
