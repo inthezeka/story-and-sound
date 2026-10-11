@@ -244,6 +244,8 @@
   button.book-card:hover{transform:translateY(-4px);border-color:#e8c2a5}
   .book-art{height:170px;max-width:170px;width:100%;display:flex;align-items:center;justify-content:center;border-radius:4px;background:linear-gradient(140deg,#46332f,#a87563 52%,#35242a);border:1px solid #e2bf9e80;box-shadow:8px 9px 24px #07060977;font:italic 54px Georgia,serif;color:#f8e5cd}
   .book-monogram span{margin-left:-10px;font-size:.65em}
+  .book-art-cover{overflow:hidden;background:#30202e}
+  .book-art-cover img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
   .book-card strong{font:500 22px Georgia,serif}
   .book-card small{font-size:11px;line-height:1.6;color:#d0c1b9}
   .book-card em{font-size:10px;letter-spacing:.16em;color:#e9c1a0;font-style:normal;margin-top:6px}
@@ -285,7 +287,7 @@
         <div class="bookshelf-heading">THE LIBRARY <span>이야기를 선택하세요</span></div>
         <div class="bookshelf-grid">
           <button class="book-card book-live" id="chooseBetweenUs" type="button" aria-label="Between Us 읽기">
-            <span class="book-art"><span class="book-monogram">B<span>U</span></span></span>
+            <span class="book-art book-art-cover"><img src="images/between-us-cover.jpg" alt="Between Us 공식 책 표지" loading="eager" onerror="this.style.display=\'none\'"></span>
             <strong>Between Us</strong><small>음악과 함께 읽는 우리의 이야기</small><em>READ NOW →</em>
           </button>
           <div class="book-card book-upcoming" aria-label="새로운 이야기 준비 중"><span class="book-art">✧</span><strong>Coming Soon</strong><small>새로운 이야기를 준비 중입니다</small><em>준비 중</em></div>
