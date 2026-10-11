@@ -565,10 +565,10 @@ function updateVolume(){stopFade();audioNodes.forEach((a,i)=>{a.volume=i===audio
      문단을 통째로 먼저 시도하고, 문단 하나가 화면보다 클 때만 텍스트를 나눕니다.
      각 글자 UTF-16 오프셋을 유지하므로 글자 중복/누락이 없습니다.
 ============================================================================ */
-function displayChapterLabel(ch){return Number(ch.number)===1?'PROLOGUE':'CHAPTER '+String(Number(ch.number)-1).padStart(2,'0')}
+function displayChapterLabel(ch){return 'CHAPTER '+String(ch.number).padStart(2,'0')}
 function htmlPiece(piece,ch){
   if(piece.type==='head'){
-    const chapterIndex=Math.max(0,Number(ch.number)-1);
+    const chapterIndex=Number(ch.number);
     const illustration=(chapterIndex>=1&&chapterIndex<=8)?'images/chapter'+String(chapterIndex).padStart(2,'0')+'.png':'';
     return '<div class="chapter-head"><span class="chapter-number">'+displayChapterLabel(ch)+'</span><h2>'+escapeHTML(ch.title)+'</h2><span class="chapter-underline"></span>'+(illustration?'<div class="chapter-illustration-wrap"><img class="chapter-illustration" src="'+illustration+'" alt="'+escapeHTML(ch.title)+' 대표 삽화" loading="eager" onerror="this.parentElement.style.display=\'none\'"></div>':'')+'</div>';
   }
@@ -780,7 +780,7 @@ function closeDrawer(){
   if(state.started)refs.stage.focus({preventScroll:true});
 }
 function renderChapterList(){
-  $('chapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button type="button" class="chapter-card '+(state.chapter===i?'active':'')+'" data-chapter="'+i+'"><span class="num">'+(Number(ch.number)===1?'P':String(Number(ch.number)-1).padStart(2,'0'))+'</span><span><strong>'+escapeHTML(ch.title)+'</strong><small>'+escapeHTML(ch.description||'')+'</small></span></button>').join('');
+  $('chapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button type="button" class="chapter-card '+(state.chapter===i?'active':'')+'" data-chapter="'+i+'"><span class="num">'+String(ch.number).padStart(2,'0')+'</span><span><strong>'+escapeHTML(ch.title)+'</strong><small>'+escapeHTML(ch.description||'')+'</small></span></button>').join('');
 }
 function applyAndRebuild(){
   const anchor=state.anchor;updatePreferences();
@@ -1017,12 +1017,12 @@ function studioSyncForm(){
   studioDirty=true;
 }
 function studioListRender(){
-  $('studioChapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button class="studio-chapter '+(i===studioActive?'active':'')+'" type="button" data-edit-chapter="'+i+'"><span class="num">'+(i===0?'P':String(i).padStart(2,'0'))+'</span><span><strong>'+studioEscape(ch.title)+'</strong><small>'+studioEscape(ch.description||'')+'</small></span></button>').join('');
+  $('studioChapterList').innerHTML=STORY.chapters.map((ch,i)=>'<button class="studio-chapter '+(i===studioActive?'active':'')+'" type="button" data-edit-chapter="'+i+'"><span class="num">'+String(i+1).padStart(2,'0')+'</span><span><strong>'+studioEscape(ch.title)+'</strong><small>'+studioEscape(ch.description||'')+'</small></span></button>').join('');
 }
 function studioLoadEditor(){
   const ch=STORY.chapters[studioActive];if(!ch)return;
   studioScenes=studioExtractScenes(ch);studioChapterBgm=ch.bgm?{...ch.bgm}:null;studioChapterBg=ch.background||'';
-  $('studioChapterLabel').textContent=(studioActive===0?'PROLOGUE':'CHAPTER '+String(studioActive).padStart(2,'0'));
+  $('studioChapterLabel').textContent='CHAPTER '+String(studioActive+1).padStart(2,'0');
   $('studioTitle').value=ch.title;$('studioDescription').value=ch.description||'';
   $('studioManuscript').value=studioPlainText(ch);
   $('studioBgmName').value=studioChapterBgm?.title||'';
