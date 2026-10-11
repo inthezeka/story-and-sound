@@ -931,6 +931,8 @@ const STUDIO_DB='story-sound-studio-v2';
 const STUDIO_VERSION=2;
 const bundledStory=JSON.parse(JSON.stringify(STORY));
 let publishedStory=JSON.parse(JSON.stringify(STORY));
+// Public readers always see the published story; administrator drafts stay separate.
+let studioDraftStory=null,studioEditing=false;
 let studioDB=null,studioActive=0,studioScenes=[],studioChapterBgm=null,studioChapterBg='',studioAvailable=true;
 let studioDirty=false,studioWorking=false,studioStatusTimer=null;
 const studioBlobs=new Map(),studioObjectURLs=new Map();
@@ -1017,7 +1019,10 @@ async function studioInit(){
       const localMedia=await studioIDB('media','readonly',store=>store.getAll());
       for(const item of (localMedia||[]))if(item?.blob)studioBlobs.set(item.id,item);
       const draft=await studioIDB('state','readonly',store=>store.get('draft'));
-      if(studioValidStory(draft))STORY=cloneStory(draft);
+      if(studioValidStory(draft)){
+        studioDraftStory=cloneStory(draft);
+        if(!window.STORY_CONTENT_PUBLISHED)STORY=cloneStory(draft);
+      }
     }catch(e){studioAvailable=false;console.warn('[Story & Sound] 로컬 편집 저장 기능 제한:',e);studioStatus('이 환경에서는 편집 저장이 불가능합니다. 파일을 다른 브라우저 또는 로컬 서버에서 열어주세요.',true)}
     studioRefreshLengths();studioCoverUpdate();
   }finally{
@@ -1086,6 +1091,7 @@ function studioScenesRender(){
 async function studioPersist(){
   if(!studioAvailable)throw Error('이 브라우저에서는 IndexedDB 저장소를 사용할 수 없습니다.');
   await studioIDB('state','readwrite',store=>store.put(cloneStory(STORY),'draft'));
+  studioDraftStory=cloneStory(STORY);
   studioDirty=false;
 }
 async function studioSave(quiet=false){
@@ -1106,6 +1112,12 @@ function studioShow(tab){
 }
 function studioOpen(){
   if(state.drawer)closeDrawer();
+  if(window.STORY_CONTENT_PUBLISHED&&!studioEditing){
+    STORY=cloneStory(studioValidStory(studioDraftStory)?studioDraftStory:publishedStory);
+    studioEditing=true;
+    studioRefreshLengths();
+    studioCoverUpdate();
+  }
   refs.app.classList.remove('chrome-hidden');
   $('studioOverlay').classList.remove('hidden');studioActive=Math.max(0,Math.min(studioActive,STORY.chapters.length-1));
   studioLoadEditor();studioShow('edit');
@@ -1113,7 +1125,15 @@ function studioOpen(){
   $('studioClose').focus();
 }
 async function studioClose(){
+  if(studioWorking){studioStatus('진행 중인 작업이 끝난 뒤 닫아주세요.',true);return}
   if(studioDirty)await studioSave(true);
+  if(window.STORY_CONTENT_PUBLISHED&&studioEditing){
+    studioDraftStory=cloneStory(STORY);
+    STORY=cloneStory(publishedStory);
+    studioEditing=false;
+    studioRefreshLengths();
+    studioCoverUpdate();
+  }
   $('studioOverlay').classList.add('hidden');
   if(state.started)refs.stage.focus({preventScroll:true});
 }
