@@ -312,6 +312,7 @@
       <div class="brand"><span class="brand-emblem">S</span><span>STORY &amp; SOUND</span></div>
       <div class="top-center" id="currentChapterName">CHAPTER 01 · 첫 만남</div>
       <div class="top-actions">
+        <button type="button" class="icon-btn" id="homeLibraryButton" aria-label="서재 홈으로 돌아가기" title="서재로"><svg class="icon"><use href="#i-home"/></svg><span class="control-label">홈</span></button>
         <button type="button" class="icon-btn" id="tocButton" aria-label="챕터 목차 열기" title="목차"><svg class="icon"><use href="#i-menu"/></svg><span class="control-label">목차</span></button>
         <button type="button" class="icon-btn" id="settingsButton" aria-label="독서 설정 열기" title="설정"><svg class="icon"><use href="#i-settings"/></svg></button>
       </div>
@@ -834,6 +835,7 @@ $('chooseBetweenUs').addEventListener('click',()=>{$('bookshelf').classList.add(
 $('backToShelf').addEventListener('click',()=>{$('bookStart').classList.add('hidden');$('bookshelf').classList.remove('hidden');});
 $('startWithMusic').addEventListener('click',()=>openReader(true));
 $('startSilent').addEventListener('click',()=>openReader(false));
+$('homeLibraryButton').addEventListener('click',()=>{persist();returnToCover();$('bookStart').classList.add('hidden');$('bookshelf').classList.remove('hidden');});
 $('tocButton').addEventListener('click',()=>openDrawer('chapters'));
 $('settingsButton').addEventListener('click',()=>openDrawer('settings'));
 $('drawerClose').addEventListener('click',closeDrawer);
