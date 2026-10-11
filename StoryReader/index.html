@@ -228,6 +228,33 @@
 .chapter-illustration-wrap{width:100%;margin:12px auto 6px;max-width:640px;text-align:center}
 .chapter-illustration{display:block;width:100%;height:auto;max-height:220px;object-fit:contain;border-radius:12px;box-shadow:0 8px 22px rgba(0,0,0,.16)}
 @media(max-width:680px){.chapter-illustration{max-height:145px}.chapter-illustration-wrap{margin-top:8px}}
+
+  /* Public bookshelf entry */
+  .cover-inner:has(.bookshelf:not(.hidden)){width:min(96vw,1000px);min-height:100%;padding:22px 16px}
+  .cover-inner:has(.bookshelf:not(.hidden))>.cover-divider,
+  .cover-inner:has(.bookshelf:not(.hidden))>.cover-description,
+  .cover-inner:has(.bookshelf:not(.hidden))>#resumeHint,
+  .cover-inner:has(.bookshelf:not(.hidden))>#publishedEditionBadge{display:none}
+  .bookshelf{width:100%;margin:24px auto 12px}
+  .bookshelf-heading{font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.27em;color:#e1bea0;margin-bottom:20px}
+  .bookshelf-heading span{display:block;font-size:13px;letter-spacing:.08em;color:#e8dcd5;margin-top:12px;font-weight:400}
+  .bookshelf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:800px;margin:auto}
+  .book-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0;padding:14px 14px 18px;border:1px solid #dfbea74a;border-radius:12px;background:#ffffff0a;color:#f3eae2}
+  button.book-card{cursor:pointer;transition:transform .18s,border-color .18s}
+  button.book-card:hover{transform:translateY(-4px);border-color:#e8c2a5}
+  .book-art{height:170px;max-width:170px;width:100%;display:flex;align-items:center;justify-content:center;border-radius:4px;background:linear-gradient(140deg,#46332f,#a87563 52%,#35242a);border:1px solid #e2bf9e80;box-shadow:8px 9px 24px #07060977;font:italic 54px Georgia,serif;color:#f8e5cd}
+  .book-monogram span{margin-left:-10px;font-size:.65em}
+  .book-card strong{font:500 22px Georgia,serif}
+  .book-card small{font-size:11px;line-height:1.6;color:#d0c1b9}
+  .book-card em{font-size:10px;letter-spacing:.16em;color:#e9c1a0;font-style:normal;margin-top:6px}
+  .book-upcoming{opacity:.5;cursor:default}
+  .book-upcoming .book-art{background:linear-gradient(135deg,#34323c,#161720);color:#d4c7bb}
+  .book-start{width:100%;display:flex;align-items:center;flex-direction:column;gap:14px;margin:20px auto 0}
+  .book-start.hidden{display:none}
+  .book-back{background:none;border:0;color:#dcc0ac;padding:10px;font-size:12px}
+  .book-selected-title{font:italic 36px Georgia,serif;margin:4px 0 0}
+  .book-selected-sub{margin:0 0 10px;font-size:13px;color:#d6c2b3}
+  @media(max-width:680px){.cover-inner:has(.bookshelf:not(.hidden)){justify-content:flex-start;padding-top:25px;overflow-y:auto}.bookshelf-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.book-card{padding:10px 7px}.book-art{height:118px;width:100%}.book-card strong{font-size:16px}.book-card small{font-size:10px}.cover-inner:has(.bookshelf:not(.hidden)) h1{font-size:clamp(40px,10vw,70px)}}
 </style>
 </head>
 <body>
@@ -254,10 +281,26 @@
       <p class="cover-sub">A story you can hear.</p>
       <div class="cover-divider"></div>
       <p class="cover-description">문장 사이로 음악이 흐르고,<br>페이지마다 하나의 장면이 되는 시간.</p>
-      <div class="cover-actions">
-        <button class="primary-action" id="startWithMusic" type="button"><svg class="icon"><use href="#i-play"/></svg> 이야기 시작하기</button>
-        <button class="secondary-action" id="startSilent" type="button">음악 없이 시작하기</button>
-        <button type="button" class="studio-launch" id="studioCoverButton">✦ 관리자 · 소설과 음악 편집</button>
+      <div class="bookshelf" id="bookshelf" aria-label="책 선택">
+        <div class="bookshelf-heading">THE LIBRARY <span>이야기를 선택하세요</span></div>
+        <div class="bookshelf-grid">
+          <button class="book-card book-live" id="chooseBetweenUs" type="button" aria-label="Between Us 읽기">
+            <span class="book-art"><span class="book-monogram">B<span>U</span></span></span>
+            <strong>Between Us</strong><small>음악과 함께 읽는 우리의 이야기</small><em>READ NOW →</em>
+          </button>
+          <div class="book-card book-upcoming" aria-label="새로운 이야기 준비 중"><span class="book-art">✧</span><strong>Coming Soon</strong><small>새로운 이야기를 준비 중입니다</small><em>준비 중</em></div>
+          <div class="book-card book-upcoming" aria-label="새로운 이야기 준비 중"><span class="book-art">✧</span><strong>Coming Soon</strong><small>새로운 이야기를 준비 중입니다</small><em>준비 중</em></div>
+        </div>
+      </div>
+      <div class="book-start hidden" id="bookStart">
+        <button class="book-back" id="backToShelf" type="button">← 모든 책 보기</button>
+        <h2 class="book-selected-title">Between Us</h2>
+        <p class="book-selected-sub">첫 페이지부터, 두 사람의 이야기</p>
+        <div class="cover-actions">
+          <button class="primary-action" id="startWithMusic" type="button"><svg class="icon"><use href="#i-play"/></svg> 음악과 함께 읽기</button>
+          <button class="secondary-action" id="startSilent" type="button">음악 없이 읽기</button>
+          <button type="button" class="studio-launch" id="studioCoverButton" style="display:none" aria-hidden="true" tabindex="-1">관리자 편집 비활성</button>
+        </div>
       </div>
       <p id="resumeHint" class="resume-text"></p>
       <p id="publishedEditionBadge" style="font-size:12px;letter-spacing:.08em;color:#b9d5c9;margin:13px 0 0">게시본 40개 챕터 · v20261011-bgm00-39</p>
@@ -326,7 +369,7 @@
     </div>
     <div class="drawer-body hidden" id="chaptersContent"><div class="group-title">CONTENTS · 챕터 선택</div><nav id="chapterList" class="chapter-list" aria-label="챕터 목록"></nav></div>
   </aside>
-  <section class="studio hidden" id="studioOverlay" role="dialog" aria-label="Story & Sound 관리자 편집 모드" aria-modal="true">
+  <section class="studio hidden" id="studioOverlay" style="display:none!important" role="dialog" aria-label="Story & Sound 관리자 편집 모드" aria-modal="true">
     <header class="studio-header">
       <div><small>STORY & SOUND · CONTENT STUDIO</small><strong>Content Studio</strong></div>
       <div class="studio-top-actions">
@@ -787,6 +830,8 @@ function applyAndRebuild(){
   // Rebuild after browser style/layout flush. Keep text position, not old page number.
   requestAnimationFrame(()=>{state.anchor=anchor;rebuildPages();persist()});
 }
+$('chooseBetweenUs').addEventListener('click',()=>{$('bookshelf').classList.add('hidden');$('bookStart').classList.remove('hidden');});
+$('backToShelf').addEventListener('click',()=>{$('bookStart').classList.add('hidden');$('bookshelf').classList.remove('hidden');});
 $('startWithMusic').addEventListener('click',()=>openReader(true));
 $('startSilent').addEventListener('click',()=>openReader(false));
 $('tocButton').addEventListener('click',()=>openDrawer('chapters'));
@@ -1093,7 +1138,7 @@ async function studioSwitchSource(source){
     ? '이전 로컬 초안을 불러왔습니다. 공개 게시본이 아니며, 독서 화면은 기존 최신 게시본을 유지합니다.'
     : '최신 게시본을 편집기에 불러왔습니다. 독서 화면과 같은 원고입니다.');
 }
-function studioOpen(){
+function studioOpen(){return; // Public edition: editing is disabled. Manage published content via authenticated GitHub repository.
   if(state.drawer)closeDrawer();
   if(window.STORY_CONTENT_PUBLISHED&&!studioEditing){
     // Never allow an outdated local draft to silently override the published manuscript.
@@ -1224,8 +1269,8 @@ async function studioRestorePublished(){
   try{await studioIDB('state','readwrite',os=>{os.delete('draft');os.delete('draft-archive')});await studioIDB('media','readwrite',os=>os.clear());location.reload()}
   catch(e){studioStatus('초기화 실패: '+e.message,true)}
 }
-$('studioCoverButton').addEventListener('click',studioOpen);
-$('studioSettingsButton').addEventListener('click',studioOpen);
+// Public edition: administrator launcher disabled.
+// Public edition: administrator settings launcher disabled.
 $('studioClose').addEventListener('click',studioClose);
 $('studioUsePublishedButton').addEventListener('click',()=>studioSwitchSource('published'));
 $('studioUseDraftButton').addEventListener('click',()=>studioSwitchSource('draft'));
